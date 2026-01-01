@@ -265,27 +265,27 @@ export default function Home() {
                 scale: [1, 1.01, 0.99, 1.005, 1],
             } : { x: 0, y: 0, rotate: 0, scale: 1 }}
             transition={{ duration: 0.7, ease: [0.36, 0.07, 0.19, 0.97] }}
-            className="relative min-h-screen selection:bg-neon/30 font-sans overflow-x-hidden text-foreground transition-colors duration-500"
+            className="relative min-h-screen selection:bg-neon/30 font-sans overflow-x-hidden text-foreground transition-colors duration-500 pb-24"
         >
             <ModernBackground />
 
             {/* Navigation */}
-            <nav className="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-background/5 backdrop-blur-md border-b border-foreground/5">
-                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-background font-black text-2xl shadow-xl shadow-primary/20 rotate-3 transform hover:rotate-0 transition-transform">ቀ</div>
-                    <span className="font-black text-3xl tracking-tighter uppercase">
+            <nav className="fixed top-0 w-full z-50 px-4 md:px-6 py-4 flex justify-between items-center bg-background/5 backdrop-blur-md border-b border-foreground/5">
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2 md:gap-3">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-primary flex items-center justify-center text-background font-black text-xl md:text-2xl shadow-xl shadow-primary/20 rotate-3 transform hover:rotate-0 transition-transform">ቀ</div>
+                    <span className="font-black text-2xl md:text-3xl tracking-tighter uppercase whitespace-nowrap">
                         ቀላል<span className="text-primary italic underline decoration-neon decoration-4 underline-offset-4">LINK</span>
                     </span>
                 </motion.div>
 
-                <div className="flex items-center gap-4">
-                    <button onClick={toggleLang} className="px-6 py-4 rounded-3xl glass-card hover:border-primary/60 transition-all text-primary font-black text-sm uppercase tracking-widest border-2">
+                <div className="flex items-center gap-2 md:gap-4">
+                    <button onClick={toggleLang} className="px-4 md:px-6 py-3 md:py-4 rounded-2xl md:rounded-3xl glass-card hover:border-primary/60 transition-all text-primary font-black text-xs uppercase tracking-widest border-2">
                         {lang === "en" ? "AM" : "EN"}
                     </button>
-                    <button onClick={toggleTheme} className="p-4 rounded-3xl glass-card hover:border-primary/60 transition-all text-primary border-2">
+                    <button onClick={toggleTheme} className="p-3 md:p-4 rounded-2xl md:rounded-3xl glass-card hover:border-primary/60 transition-all text-primary border-2">
                         <AnimatePresence mode="wait">
                             <motion.div key={resolvedTheme} initial={{ scale: 0, rotate: -180, opacity: 0 }} animate={{ scale: 1, rotate: 0, opacity: 1 }} exit={{ scale: 0, rotate: 180, opacity: 0 }} className="text-primary dark:text-neon">
-                                {resolvedTheme === "dark" ? <Sun size={24} /> : <Moon size={24} />}
+                                {resolvedTheme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
                             </motion.div>
                         </AnimatePresence>
                     </button>
@@ -298,8 +298,8 @@ export default function Home() {
                 )}
             </AnimatePresence>
 
-            <main className="relative z-10 max-w-7xl mx-auto px-6 pt-40 pb-20">
-                <div className="grid lg:grid-cols-12 gap-12 items-start">
+            <main className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 pt-28 md:pt-40 pb-20">
+                <div className="grid lg:grid-cols-12 gap-8 md:gap-12 items-start">
                     {/* Hero Sidebar */}
                     <div className="lg:col-span-1 hidden lg:flex flex-col gap-8 pt-12">
                         {[Sparkles, MousePointer2, Fingerprint, Zap].map((Icon, i) => (
@@ -310,25 +310,25 @@ export default function Home() {
                     </div>
 
                     {/* Main Hero & Input */}
-                    <div className="lg:col-span-11 grid lg:grid-cols-2 gap-16">
-                        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-                            <div className="inline-block px-5 py-2 glass-card rounded-full border-neon/30 text-xs font-black uppercase tracking-[0.2em] text-neon animate-pulse">{t.heroPre}</div>
-                            <h1 className="text-7xl md:text-9xl font-black leading-[0.85] tracking-tighter drop-shadow-2xl text-foreground text-contrast">
+                    <div className="lg:col-span-11 grid lg:grid-cols-2 gap-10 md:gap-16">
+                        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 md:space-y-8">
+                            <div className="inline-block px-4 md:px-5 py-2 glass-card rounded-full border-neon/30 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-neon animate-pulse">{t.heroPre}</div>
+                            <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black leading-[0.85] tracking-tighter drop-shadow-2xl text-foreground text-contrast">
                                 {t.heroTitle1} <br />
                                 <span className="text-primary dark:text-neon italic underline decoration-neon decoration-8 underline-offset-8">{t.heroTitle2}</span> <br />
                                 {t.heroTitle3}
                             </h1>
                             <div className="flex gap-4 items-center">
-                                <div className="h-0.5 w-12 bg-primary" />
-                                <p className="text-xl font-medium text-foreground/60 max-w-sm italic leading-relaxed">{t.heroSlogan}</p>
+                                <div className="h-0.5 w-8 md:w-12 bg-primary" />
+                                <p className="text-lg md:text-xl font-medium text-foreground/60 max-w-sm italic leading-relaxed">{t.heroSlogan}</p>
                             </div>
-                            <div className="flex gap-12 pt-8">
-                                <div className="space-y-1">
-                                    <p className="text-4xl font-black text-neon text-contrast drop-shadow-[0_0_15px_rgba(var(--accent-neon),0.3)]">{t.statSpeed}</p>
+                            <div className="flex gap-8 md:gap-12 pt-4 md:pt-8">
+                                <div className="space-y-1 text-center sm:text-left">
+                                    <p className="text-3xl md:text-4xl font-black text-neon text-contrast drop-shadow-[0_0_15px_rgba(var(--accent-neon),0.3)]">{t.statSpeed}</p>
                                     <p className="text-[10px] font-black uppercase tracking-widest text-primary dark:text-neon">{t.statSpeedLabel}</p>
                                 </div>
-                                <div className="space-y-1">
-                                    <p className="text-4xl font-black text-primary dark:text-foreground text-contrast drop-shadow-lg">{t.statPrivacy}</p>
+                                <div className="space-y-1 text-center sm:text-left">
+                                    <p className="text-3xl md:text-4xl font-black text-primary dark:text-foreground text-contrast drop-shadow-lg">{t.statPrivacy}</p>
                                     <p className="text-[10px] font-black uppercase tracking-widest text-primary dark:text-neon">{t.statPrivacyLabel}</p>
                                 </div>
                             </div>
@@ -426,32 +426,42 @@ export default function Home() {
                                 </AnimatePresence>
 
                                 {/* Flash Result */}
+                                {/* Result Card with Responsive Positioning */}
                                 <AnimatePresence>
                                     {result && (
-                                        <motion.div initial={{ opacity: 0, scale: 0.8, y: 50 }} animate={{ opacity: 1, scale: 1, y: 15 }} exit={{ opacity: 0, scale: 0.8 }} className="absolute -bottom-16 left-4 right-4 z-20">
-                                            <div className="glass-card shadow-2xl p-8 rounded-[32px] border-neon/40 flex items-center justify-between gap-6 overflow-hidden neo-shadow group">
-                                                <div className="min-w-0 relative z-10">
-                                                    <div className="flex items-center gap-3 mb-2">
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.8 }}
+                                            className="mt-8 md:absolute md:-bottom-20 md:left-4 md:right-4 z-20"
+                                        >
+                                            <div className="glass-card shadow-2xl p-6 md:p-8 rounded-[32px] border-neon/40 flex flex-col sm:flex-row items-center justify-between gap-6 overflow-hidden neo-shadow group">
+                                                <div className="min-w-0 relative z-10 w-full sm:w-auto">
+                                                    <div className="flex items-center gap-3 mb-2 justify-center sm:justify-start">
                                                         <p className="text-[10px] font-black uppercase tracking-[0.4em] text-neon">{t.resultReady}</p>
                                                         {(expiresIn > 0 || maxClicks > 0) && <span className="text-[8px] font-black py-1 px-2 rounded-lg bg-red-500/20 text-red-500 animate-pulse">SELF-DESTRUCT ACTIVE</span>}
                                                     </div>
-                                                    <h3 className="text-2xl md:text-3xl font-black truncate tracking-tighter text-contrast">{typeof window !== 'undefined' ? `${window.location.host}/${result.slug}` : `/${result.slug}`}</h3>
+                                                    <h3 className="text-xl md:text-3xl font-black truncate tracking-tighter text-contrast text-center sm:text-left">{typeof window !== 'undefined' ? `${window.location.host}/${result.slug}` : `/${result.slug}`}</h3>
                                                 </div>
-                                                <div className="flex gap-3 relative z-10">
-                                                    <button onClick={() => copyToClipboard(`${window.location.protocol}//${window.location.host}/${result.slug}`)} className="p-5 rounded-2xl bg-neon text-black hover:scale-110 transition-transform active:scale-95">{copied ? <Check size={28} /> : <Copy size={28} />}</button>
-                                                    <button onClick={() => setShowQr(!showQr)} className="px-6 py-5 rounded-2xl glass-card text-neon hover:bg-neon/10 border-neon/30 relative flex items-center gap-3">
-                                                        <QrCode size={28} />
-                                                        <span className="font-black text-xs uppercase tracking-widest hidden md:block">QR</span>
+                                                <div className="flex gap-3 relative z-10 w-full sm:w-auto justify-center">
+                                                    <button onClick={() => copyToClipboard(`${window.location.protocol}//${window.location.host}/${result.slug}`)} className="p-4 md:p-5 rounded-2xl bg-neon text-black hover:scale-110 transition-transform active:scale-95 flex-1 sm:flex-initial flex items-center justify-center">{copied ? <Check size={24} /> : <Copy size={24} />}</button>
+                                                    <button onClick={() => setShowQr(!showQr)} className="px-5 py-4 md:px-6 md:py-5 rounded-2xl glass-card text-neon hover:bg-neon/10 border-neon/30 relative flex items-center gap-3 flex-1 sm:flex-initial justify-center">
+                                                        <QrCode size={24} />
+                                                        <span className="font-black text-xs uppercase tracking-widest hidden sm:block">QR</span>
                                                         {showQr && (
-                                                            <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} className="absolute bottom-full mb-4 right-0 glass-card p-6 rounded-[32px] border-neon/40 shadow-2xl z-50 w-64 aspect-square">
+                                                            <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} className="absolute bottom-full mb-4 right-0 glass-card p-4 md:p-6 rounded-[24px] md:rounded-[32px] border-neon/40 shadow-2xl z-50 w-56 md:w-64 aspect-square">
                                                                 <img src={`${API_URL}/api/qr/${result.slug}`} alt="QR" className="w-full h-full object-contain dark:invert" />
                                                             </motion.div>
                                                         )}
                                                     </button>
                                                 </div>
-                                                <div className="absolute right-8 top-1/2 -translate-y-1/2 flex flex-col gap-2 translate-x-32 group-hover:translate-x-0 transition-transform bg-background/80 backdrop-blur-xl p-3 rounded-2xl border border-neon/20 z-30">
+                                                <div className="hidden sm:flex absolute right-8 top-1/2 -translate-y-1/2 flex-col gap-2 translate-x-32 group-hover:translate-x-0 transition-transform bg-background/80 backdrop-blur-xl p-3 rounded-2xl border border-neon/20 z-30">
                                                     <a href={`https://t.me/share/url?url=${encodeURIComponent(`${window.location.protocol}//${window.location.host}/${result.slug}`)}`} target="_blank" className="p-3 rounded-xl hover:bg-neon hover:text-black text-primary transition-all"><Send size={16} /></a>
                                                     <a href={`https://wa.me/?text=${encodeURIComponent(`${window.location.protocol}//${window.location.host}/${result.slug}`)}`} target="_blank" className="p-3 rounded-xl hover:bg-neon hover:text-black text-primary transition-all"><Share2 size={16} /></a>
+                                                </div>
+                                                <div className="flex sm:hidden w-full gap-4 pt-4 border-t border-white/5 relative z-10">
+                                                    <a href={`https://t.me/share/url?url=${encodeURIComponent(`${window.location.protocol}//${window.location.host}/${result.slug}`)}`} target="_blank" className="flex-1 py-3 glass-card rounded-xl flex items-center justify-center text-primary"><Send size={18} /></a>
+                                                    <a href={`https://wa.me/?text=${encodeURIComponent(`${window.location.protocol}//${window.location.host}/${result.slug}`)}`} target="_blank" className="flex-1 py-3 glass-card rounded-xl flex items-center justify-center text-primary"><Share2 size={18} /></a>
                                                 </div>
                                             </div>
                                         </motion.div>
@@ -463,10 +473,10 @@ export default function Home() {
                 </div>
 
                 {/* History Section */}
-                <div className="mt-52 grid lg:grid-cols-4 gap-8">
-                    <div className="lg:col-span-2 space-y-10">
+                <div className="mt-24 md:mt-52 grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
+                    <div className="lg:col-span-8 space-y-8 md:space-y-10">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                            <h2 className="text-4xl font-black tracking-tighter flex items-center gap-4 text-contrast"><BarChart2 size={32} className="text-neon" />{t.historyTitle}</h2>
+                            <h2 className="text-3xl md:text-4xl font-black tracking-tighter flex items-center gap-4 text-contrast"><BarChart2 size={32} className="text-neon" />{t.historyTitle}</h2>
 
                             <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
                                 <div className="flex bg-background/40 p-1.5 rounded-2xl border border-white/5 backdrop-blur-md">
@@ -504,7 +514,7 @@ export default function Home() {
                             </div>
                         </div>
 
-                        <div className="grid gap-6">
+                        <div className="grid gap-4 md:gap-6">
                             {[...recentUrls]
                                 .sort((a, b) => {
                                     if (historyFilter === "top") return (b.clicks || 0) - (a.clicks || 0);
@@ -533,56 +543,60 @@ export default function Home() {
                                             initial={{ opacity: 0, x: -30 }}
                                             whileInView={{ opacity: 1, x: 0 }}
                                             viewport={{ once: true }}
-                                            className="group flex items-center justify-between p-8 rounded-[32px] glass-card border-white/5 hover:border-neon/20 hover:bg-neon/5 transition-all"
+                                            className="group flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-5 md:p-8 rounded-[24px] md:rounded-[32px] glass-card border-white/5 hover:border-neon/20 hover:bg-neon/5 transition-all gap-5 md:gap-6"
                                         >
-                                            <div className="min-w-0 pr-6">
+                                            <div className="min-w-0 flex-1">
                                                 <div className="flex items-center gap-3 mb-2">
-                                                    <span className="text-3xl font-black text-primary">{u.slug}</span>
+                                                    <span className="text-xl md:text-3xl font-black text-primary truncate max-w-[120px] md:max-w-[200px]">{u.slug}</span>
                                                     {(u.title || Array.isArray(u.items)) ? (
                                                         <span className="text-[10px] font-black py-1 px-3 rounded-full bg-neon/10 text-neon uppercase tracking-widest border border-neon/10 italic flex items-center gap-1">
-                                                            <Layers size={10} /> BUNDLE
+                                                            <Layers size={10} /> {lang === 'en' ? 'BUNDLE' : 'ጥቅል'}
                                                         </span>
                                                     ) : (
                                                         <span className="text-[10px] font-black py-1 px-3 rounded-full bg-primary/10 text-primary uppercase tracking-widest border border-primary/10 italic">FIDEL</span>
                                                     )}
                                                 </div>
-                                                <p className="text-foreground/40 text-sm truncate font-bold font-mono">{u.title || u.long_url || "Untitled Drop"}</p>
+                                                <p className="text-foreground/40 text-[11px] md:text-sm truncate font-bold font-mono">{u.title || u.long_url || (lang === 'en' ? "Untitled Drop" : "ያልተሰየመ")}</p>
                                             </div>
-                                            <div className="flex items-center gap-8">
-                                                <div className="text-right pr-2">
-                                                    <span className="text-3xl font-black text-contrast block">{u.clicks || 0}</span>
-                                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{t.historyVibes}</span>
+                                            <div className="flex items-center justify-between sm:justify-end gap-6 md:gap-8 pt-4 sm:pt-0 border-t sm:border-t-0 border-white/5">
+                                                <div className="text-left sm:text-right md:pr-2">
+                                                    <span className="text-xl md:text-3xl font-black text-contrast block leading-none">{u.clicks || 0}</span>
+                                                    <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-primary">{t.historyVibes}</span>
                                                 </div>
-                                                <div className="flex gap-2">
-                                                    <button onClick={() => copyToClipboard(`${window.location.protocol}//${window.location.host}/${u.slug}`)} className="p-3 rounded-xl hover:bg-neon/20 text-foreground/20 hover:text-neon" title="Copy Link"><Copy size={18} /></button>
-                                                    <Link href={`/stats/${u.slug}`} className="p-3 rounded-xl hover:bg-neon/10 text-primary/40 hover:text-neon" title="View Stats"><Activity size={18} /></Link>
-                                                    <Link href={`/stats/${u.slug}`} className="p-3 rounded-xl hover:bg-neon/10 text-neon/40 hover:text-neon" title="View QR Code"><QrCode size={18} /></Link>
-                                                    <a href={`https://t.me/share/url?url=${encodeURIComponent(`${window.location.protocol}//${window.location.host}/${u.slug}`)}`} target="_blank" className="p-3 rounded-xl hover:bg-primary/10 text-primary/20 hover:text-primary" title="Share on Telegram"><Send size={18} /></a>
+                                                <div className="flex gap-1 md:gap-2">
+                                                    <button onClick={() => copyToClipboard(`${window.location.protocol}//${window.location.host}/${u.slug}`)} className="p-2 md:p-3 rounded-xl hover:bg-neon/20 text-foreground/40 hover:text-neon transition-all" title="Copy Link"><Copy size={16} /></button>
+                                                    <Link href={`/stats/${u.slug}`} className="p-2 md:p-3 rounded-xl hover:bg-neon/10 text-primary/40 hover:text-neon transition-all" title="View Stats"><Activity size={16} /></Link>
+                                                    <Link href={`/stats/${u.slug}`} className="p-2 md:p-3 rounded-xl hover:bg-neon/10 text-neon/40 hover:text-neon transition-all" title="View QR Code"><QrCode size={16} /></Link>
+                                                    <a href={`https://t.me/share/url?url=${encodeURIComponent(`${window.location.protocol}//${window.location.host}/${u.slug}`)}`} target="_blank" className="p-2 md:p-3 rounded-xl hover:bg-primary/10 text-primary/40 hover:text-primary transition-all" title="Share on Telegram"><Send size={16} /></a>
                                                 </div>
                                             </div>
                                         </motion.div>
                                     )) : (
-                                <div className="p-20 rounded-[40px] border-2 border-dashed border-foreground/5 flex flex-col items-center justify-center glass-card">
-                                    <Sparkles size={48} className="text-primary/20 mb-6" /><p className="font-black text-sm uppercase tracking-[0.5em] text-primary/40 text-center">{t.historyEmpty}</p>
+                                <div className="p-12 md:p-20 rounded-[32px] md:rounded-[40px] border-2 border-dashed border-foreground/5 flex flex-col items-center justify-center glass-card">
+                                    <div className="text-primary/20 mb-6">
+                                        <Sparkles size={48} className="hidden md:block" />
+                                        <Sparkles size={40} className="block md:hidden" />
+                                    </div>
+                                    <p className="font-black text-xs md:text-sm uppercase tracking-[0.5em] text-primary/40 text-center">{t.historyEmpty}</p>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    <div className="lg:col-span-2 space-y-8 lg:pl-12">
-                        <div className="p-10 rounded-[40px] bg-primary text-background relative overflow-hidden group shadow-2xl border-2 border-neon/10">
+                    <div className="lg:col-span-4 space-y-8 lg:pl-12">
+                        <div className="p-6 md:p-10 rounded-[32px] md:rounded-[40px] bg-primary text-background relative overflow-hidden group shadow-2xl border-2 border-neon/10 w-full">
                             <div className="absolute -bottom-10 -right-10 opacity-10 group-hover:rotate-12 transition-transform duration-[2s]"><Zap size={200} fill="white" /></div>
-                            <h3 className="text-3xl font-black mb-6 relative z-10 uppercase tracking-tighter">{t.sidebarIdentityTitle}</h3>
-                            <p className="text-background/90 text-lg font-bold leading-[1.6] relative z-10 italic">{t.sidebarIdentityText}</p>
+                            <h3 className="text-2xl md:text-3xl font-black mb-4 md:mb-6 relative z-10 uppercase tracking-tighter">{t.sidebarIdentityTitle}</h3>
+                            <p className="text-background/90 text-sm md:text-lg font-bold leading-relaxed md:leading-[1.6] relative z-10 italic">{t.sidebarIdentityText}</p>
                         </div>
 
-                        <div className="p-10 rounded-[40px] glass-card border-foreground/10">
-                            <h3 className="text-xs font-black uppercase tracking-[0.5em] text-primary dark:text-neon mb-10">{t.nativeVibeTitle}</h3>
-                            <div className="space-y-6">
+                        <div className="p-6 md:p-10 rounded-[32px] md:rounded-[40px] glass-card border-foreground/10 w-full">
+                            <h3 className="text-xs font-black uppercase tracking-[0.5em] text-primary dark:text-neon mb-6 md:mb-10">{t.nativeVibeTitle}</h3>
+                            <div className="space-y-4 md:space-y-6">
                                 {[{ label: t.nativePerformance, val: t.nativePerformanceVal, color: "text-neon" }, { label: t.nativeAccess, val: t.nativeAccessVal, color: "text-foreground" }, { label: t.nativeDesign, val: t.nativeDesignVal, color: "text-primary dark:text-neon" }].map((s, i) => (
-                                    <div key={i} className="flex justify-between items-end pb-5 border-b border-foreground/10">
-                                        <span className="text-[11px] font-black text-primary/70 uppercase tracking-[0.2em]">{s.label}</span>
-                                        <span className={cn("text-xl font-black tracking-tighter", s.color)}>{s.val}</span>
+                                    <div key={i} className="flex justify-between items-end pb-4 md:pb-5 border-b border-foreground/10">
+                                        <span className="text-[10px] md:text-[11px] font-black text-primary/70 uppercase tracking-[0.2em]">{s.label}</span>
+                                        <span className={cn("text-lg md:text-xl font-black tracking-tighter", s.color)}>{s.val}</span>
                                     </div>
                                 ))}
                             </div>
