@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { DonationWidget } from "@/components/donation-widget";
+import { DonationPopup } from "@/components/donation-popup";
+import { SocialSidebar } from "@/components/social-sidebar";
 import Script from "next/script";
 
 const geistSans = Geist({
@@ -31,7 +34,7 @@ export default function RootLayout({
       >
         <Script
           async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9122247401478241"
           crossOrigin="anonymous"
           strategy="afterInteractive"
         />
@@ -42,6 +45,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <DonationWidget />
+          <DonationPopup />
+          <SocialSidebar />
         </ThemeProvider>
       </body>
     </html>

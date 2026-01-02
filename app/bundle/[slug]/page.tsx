@@ -1,123 +1,155 @@
+
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Layers, ArrowRight, ExternalLink, Sparkles, LayoutGrid, List } from "lucide-react";
+import {
+    ExternalLink, Share2, Heart, Shield,
+    Layers, Zap, Sparkles, Globe, ArrowRight
+} from "lucide-react";
 import { ModernBackground } from "@/components/modern-background";
+import { getPlatformInfo } from "@/lib/platforms";
 import { cn } from "@/lib/utils";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export default function BundlePage() {
-    const params = useParams();
+export default function BundleViewPage() {
+    const { slug } = useParams();
     const router = useRouter();
-    const slug = params.slug as string;
     const [bundle, setBundle] = useState<any>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [view, setView] = useState<"grid" | "list">("grid");
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         const fetchBundle = async () => {
             try {
                 const res = await fetch(`${API_URL}/api/bundle/${slug}`);
-                if (!res.ok) throw new Error("Bundle not found");
-                const json = await res.json();
-                setBundle(json);
-            } catch (err) {
-                console.error(err);
+                if (!res.ok) throw new Error("Bundle not found or secured");
+                const data = await res.json();
+                setBundle(data);
+            } catch (err: any) {
+                setError(err.message);
+                // Redirect if not found (might be private or deleted)
+                setTimeout(() => router.push("/"), 3000);
             } finally {
-                setIsLoading(false);
+                setLoading(false);
             }
         };
         fetchBundle();
-    }, [slug]);
+    }, [slug, router]);
 
-    if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-background"><ModernBackground /><motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className="w-12 h-12 border-4 border-neon border-t-transparent rounded-full" /></div>;
+    if (loading) return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+            <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full"
+            />
+        </div>
+    );
 
-    if (!bundle) return <div className="min-h-screen flex items-center justify-center bg-background"><ModernBackground /><div className="text-center relative z-10"><h1 className="text-4xl font-black italic">BUNDLE DISSOLVED</h1><button onClick={() => router.push("/")} className="mt-4 text-neon font-black">RETURN</button></div></div>;
+    if (error) return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
+            <Shield size={64} className="text-red-500 mb-6 animate-pulse" />
+            <h1 className="text-3xl font-black text-contrast mb-4 uppercase italic">ACCESS DENIED</h1>
+            <p className="text-primary/60 font-medium italic underline decoration-red-500/30 underline-offset-4">{error.toUpperCase()}</p>
+        </div>
+    );
 
     return (
-        <div className="relative min-h-screen bg-background text-foreground font-sans selection:bg-neon/30 overflow-x-hidden">
+        <div className="relative min-h-screen bg-background selection:bg-neon/30 text-foreground overflow-x-hidden pb-20">
             <ModernBackground />
 
-            {/* Header */}
-            <header className="fixed top-0 w-full z-50 p-6 flex justify-between items-center bg-background/5 backdrop-blur-xl border-b border-white/5">
-                <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-neon flex items-center justify-center text-black font-black rotate-6 shadow-lg shadow-neon/20">ቀ</div>
-                    <div>
-                        <h2 className="text-sm font-black uppercase tracking-[0.3em]">{bundle.title}</h2>
-                        <p className="text-[8px] font-black text-neon tracking-widest uppercase">BUNDLE COLLECTION / {slug}</p>
-                    </div>
-                </div>
-                <div className="flex bg-white/5 p-1 rounded-xl border border-white/10">
-                    <button onClick={() => setView("grid")} className={cn("p-2 rounded-lg transition-all", view === "grid" ? "bg-neon text-black" : "text-primary/40")}><LayoutGrid size={16} /></button>
-                    <button onClick={() => setView("list")} className={cn("p-2 rounded-lg transition-all", view === "list" ? "bg-neon text-black" : "text-primary/40")}><List size={16} /></button>
-                </div>
-            </header>
-
-            <main className="relative z-10 max-w-6xl mx-auto px-6 pt-40 pb-32">
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
-                    <div className="flex items-end gap-6 border-l-4 border-neon pl-8">
-                        <div>
-                            <span className="text-[10px] font-black uppercase tracking-[0.5em] text-neon block mb-2">SHARED DROPS</span>
-                            <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-contrast drop-shadow-2xl italic leading-none">{bundle.title}</h1>
-                        </div>
-                        <div className="hidden md:block pb-1">
-                            <Layers className="text-primary/20" size={48} />
+            <div className="max-w-2xl mx-auto px-6 pt-24 md:pt-32 space-y-12 relative z-10">
+                {/* Profile Header */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center space-y-6"
+                >
+                    <div className="relative inline-block">
+                        <motion.div
+                            animate={{ rotate: [0, 10, -10, 0] }}
+                            transition={{ duration: 6, repeat: Infinity }}
+                            className="w-24 h-24 md:w-32 md:h-32 rounded-[2.5rem] md:rounded-[3.5rem] bg-glass-deep border-4 border-neon shadow-2xl flex items-center justify-center text-primary"
+                        >
+                            <Layers size={48} className="md:size-64" />
+                        </motion.div>
+                        <div className="absolute -bottom-2 -right-2 bg-neon text-black text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-tighter shadow-lg border-2 border-background">
+                            STUDIO V1
                         </div>
                     </div>
 
-                    <div className={cn(
-                        "grid gap-6",
-                        view === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
-                    )}>
-                        {bundle.items.map((item: any, i: number) => (
+                    <div className="space-y-3">
+                        <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-contrast uppercase italic leading-none">
+                            {bundle.title}
+                        </h1>
+                        <p className="text-sm md:text-lg font-bold text-primary/60 italic leading-relaxed max-w-md mx-auto">
+                            {bundle.description}
+                        </p>
+                    </div>
+                </motion.div>
+
+                {/* Items List */}
+                <div className="space-y-4">
+                    {bundle.items.map((item: any, i: number) => {
+                        const platform = getPlatformInfo(item.url);
+                        return (
                             <motion.a
                                 key={i}
                                 href={item.url}
                                 target="_blank"
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
+                                rel="noopener noreferrer"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: i * 0.1 }}
-                                className={cn(
-                                    "group relative glass-card p-10 rounded-[48px] border-white/5 hover:border-neon/40 hover:bg-neon/5 transition-all flex flex-col justify-between overflow-hidden",
-                                    view === "list" ? "flex-row items-center py-6" : "aspect-square"
-                                )}
+                                className="group relative block w-full"
                             >
-                                <div className="absolute -right-8 -top-8 text-8xl font-black text-primary/5 pointer-events-none group-hover:text-neon/5 transition-colors">
-                                    {(i + 1).toString().padStart(2, '0')}
-                                </div>
-                                <div className="relative z-10">
-                                    <h3 className="text-2xl font-black text-contrast group-hover:text-neon transition-colors mb-2 uppercase italic">{item.label}</h3>
-                                    <p className="text-xs text-primary/40 truncate max-w-full font-mono">{item.url}</p>
-                                </div>
-                                <div className="relative z-10 flex justify-end">
-                                    <div className="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center group-hover:bg-neon group-hover:text-black transition-all group-hover:scale-110 shadow-xl border border-white/5 group-hover:border-neon">
-                                        <ArrowRight size={24} className="-rotate-45 group-hover:rotate-0 transition-transform" />
+                                <div className="absolute inset-0 bg-primary/20 rounded-[2.5rem] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                <div className="relative glass-card p-6 md:p-8 rounded-[2.5rem] border-glass-stroke group-hover:border-neon group-hover:bg-neon/5 transition-all flex items-center justify-between gap-4 overflow-hidden shadow-xl active:scale-95">
+                                    <div className="flex items-center gap-6">
+                                        <div className={cn("w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-glass-fill flex items-center justify-center text-primary group-hover:bg-neon group-hover:text-black transition-all group-hover:rotate-12", platform.color)}>
+                                            <platform.icon size={28} />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <h3 className="text-xl md:text-2xl font-black text-contrast tracking-tighter uppercase group-hover:text-primary transition-colors truncate">
+                                                {item.label}
+                                            </h3>
+                                            <p className="text-[10px] font-black text-primary/40 uppercase tracking-[0.2em] truncate">
+                                                {new URL(item.url).hostname}
+                                            </p>
+                                        </div>
                                     </div>
+                                    <ArrowRight size={24} className="text-primary/20 group-hover:text-neon group-hover:translate-x-2 transition-all shrink-0" />
                                 </div>
                             </motion.a>
-                        ))}
-                    </div>
+                        );
+                    })}
+                </div>
 
-                    <div className="pt-20 text-center space-y-8">
-                        <div className="inline-flex flex-col items-center">
-                            <Sparkles className="text-neon mb-4 animate-bounce" size={32} />
-                            <p className="text-sm font-black uppercase tracking-[0.6em] text-primary/30">BUILT WITH HERITAGE TECH</p>
-                        </div>
-                        <button
-                            onClick={() => router.push("/")}
-                            className="bg-primary/5 border border-primary/20 text-primary hover:bg-neon hover:text-black hover:border-neon transition-all px-12 py-5 rounded-3xl font-black uppercase tracking-widest text-xs flex items-center gap-4 mx-auto"
-                        >
-                            CREATE YOUR OWN DROP <ExternalLink size={16} />
+                {/* Footer Branding */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    className="pt-12 border-t border-glass-stroke flex flex-col items-center gap-6 text-center"
+                >
+                    <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-black uppercase tracking-[0.5em] text-primary/30 flex items-center gap-2">
+                            CRAFTED WITH <Heart size={12} className="text-red-500/40" /> BY ABEL BEKELE
+                        </span>
+                    </div>
+                    <div className="flex gap-4">
+                        <a href="https://jami.bio/Abelb" target="_blank" className="px-6 py-3 rounded-2xl glass-card border-glass-stroke text-[10px] font-black uppercase tracking-widest text-primary hover:bg-neon hover:text-black transition-all">Support Creator</a>
+                        <button onClick={() => {
+                            navigator.clipboard.writeText(window.location.href);
+                            alert("Link copied!");
+                        }} className="p-3 rounded-2xl glass-card border-glass-stroke text-primary hover:bg-primary hover:text-background transition-all">
+                            <Share2 size={16} />
                         </button>
                     </div>
                 </motion.div>
-            </main>
-
-            {/* Ethiopian Pattern Bottom Decoration */}
-            <div className="fixed bottom-0 left-0 w-full h-2 bg-gradient-to-r from-yellow-400 via-red-500 to-green-600 opacity-20" />
+            </div>
         </div>
     );
 }

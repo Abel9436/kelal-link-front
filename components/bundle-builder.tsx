@@ -1,0 +1,253 @@
+"use client";
+
+import React, { useState } from 'react';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { motion } from 'framer-motion';
+import { GripVertical, Trash2, Plus, Link as LinkIcon, Type, Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { getPlatformInfo } from '@/lib/platforms';
+
+interface LinkItem {
+    id: string;
+    label: string;
+    url: string;
+}
+
+interface SortableItemProps {
+    id: string;
+    link: LinkItem;
+    onUpdate: (id: string, field: 'label' | 'url', value: string) => void;
+    onRemove: (id: string) => void;
+    lang: 'en' | 'am';
+}
+
+function SortableItem({ id, link, onUpdate, onRemove, lang }: SortableItemProps) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 50 : 0,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={cn(
+                "group relative glass-card p-4 rounded-3xl border-glass-stroke transition-all mb-4",
+                isDragging ? "opacity-50 ring-2 ring-primary scale-105 shadow-2xl" : "hover:border-primary/20"
+            )}
+        >
+            <div className="flex items-start gap-4">
+                <div
+                    {...attributes}
+                    {...listeners}
+                    className="mt-3 p-2 cursor-grab active:cursor-grabbing rounded-xl hover:bg-glass-fill text-primary/60 hover:text-primary transition-colors"
+                >
+                    <GripVertical size={20} />
+                </div>
+
+                <div className="flex-1 space-y-3">
+                    <div className="relative group/input">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/60 group-focus-within/input:text-neon transition-colors">
+                            {React.createElement(getPlatformInfo(link.url).icon, { size: 16, className: getPlatformInfo(link.url).color })}
+                        </div>
+                        <input
+                            type="text"
+                            placeholder={lang === 'en' ? "Link Title (e.g. My Telegram)" : "የሊንኩ ስም (ለምሳሌ፡ የኔ ቴሌግራም)"}
+                            value={link.label}
+                            onChange={(e) => onUpdate(id, 'label', e.target.value)}
+                            className="w-full bg-glass-fill border border-glass-stroke rounded-2xl py-3 pl-12 pr-4 text-sm font-bold outline-none focus:border-neon focus:bg-background transition-all"
+                        />
+                    </div>
+
+                    <div className="relative group/input">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/60 group-focus-within/input:text-neon transition-colors">
+                            <LinkIcon size={16} />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="https://..."
+                            value={link.url}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                onUpdate(id, 'url', val);
+                                if (!link.label) {
+                                    const info = getPlatformInfo(val);
+                                    if (info.label) onUpdate(id, 'label', info.label);
+                                }
+                            }}
+                            className="w-full bg-glass-fill border border-glass-stroke rounded-2xl py-3 pl-12 pr-4 text-sm font-mono outline-none focus:border-neon focus:bg-background transition-all"
+                        />
+                    </div>
+                </div>
+
+                <button
+                    onClick={() => onRemove(id)}
+                    className="mt-3 p-3 rounded-2xl hover:bg-red-500/10 text-red-500/60 hover:text-red-500 transition-all"
+                >
+                    <Trash2 size={20} />
+                </button>
+            </div>
+        </div>
+    );
+}
+
+interface BundleBuilderProps {
+    title: string;
+    setTitle: (t: string) => void;
+    description: string;
+    setDescription: (d: string) => void;
+    items: LinkItem[];
+    setItems: (items: LinkItem[]) => void;
+    lang: 'en' | 'am';
+}
+
+export function BundleBuilder({
+    title,
+    setTitle,
+    description,
+    setDescription,
+    items,
+    setItems,
+    lang
+}: BundleBuilderProps) {
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (over && active.id !== over.id) {
+            const oldIndex = items.findIndex((i) => i.id === active.id);
+            const newIndex = items.findIndex((i) => i.id === over.id);
+            setItems(arrayMove(items, oldIndex, newIndex));
+        }
+    };
+
+    const updateItem = (id: string, field: 'label' | 'url', value: string) => {
+        setItems(items.map(item => item.id === id ? { ...item, [field]: value } : item));
+    };
+
+    const removeItem = (id: string) => {
+        if (items.length > 1) {
+            setItems(items.filter(item => item.id !== id));
+        }
+    };
+
+    const addItem = () => {
+        setItems([...items, { id: Math.random().toString(36).substr(2, 9), label: '', url: '' }]);
+    };
+
+    return (
+        <div className="space-y-8">
+            {/* Profile Section */}
+            <div className="glass-card p-8 rounded-[40px] border-glass-stroke space-y-6">
+                <div className="flex items-center gap-4 mb-4">
+                    <div className="p-3 bg-neon/10 rounded-2xl text-neon">
+                        <Sparkles size={24} />
+                    </div>
+                    <h3 className="text-xl font-black tracking-tight uppercase">
+                        {lang === 'en' ? 'Bundle Identity' : 'የጥቅል ማንነት'}
+                    </h3>
+                </div>
+
+                <div className="space-y-4">
+                    <div className="relative group/input">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-primary/70 ml-4 mb-2 block">
+                            {lang === 'en' ? 'Bundle Title' : 'የጥቅል ስም'}
+                        </label>
+                        <input
+                            type="text"
+                            placeholder={lang === 'en' ? "My Social Hub" : "የኔ ማህበራዊ ገጽ"}
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            className="w-full bg-glass-fill border border-glass-stroke rounded-2xl py-4 px-6 text-lg font-black outline-none focus:border-neon focus:bg-background transition-all text-contrast"
+                        />
+                    </div>
+
+                    <div className="relative group/input">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-primary/70 ml-4 mb-2 block">
+                            {lang === 'en' ? 'Bio / Description (Optional)' : 'መግለጫ (አማራጭ)'}
+                        </label>
+                        <textarea
+                            placeholder={lang === 'en' ? "Welcome to my digital corner..." : "እንኳን ወደ ዲጂታል ገጼ በሰላም መጡ..."}
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            rows={2}
+                            className="w-full bg-glass-fill border border-glass-stroke rounded-2xl py-4 px-6 text-sm font-bold outline-none focus:border-neon focus:bg-background transition-all resize-none"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Links Section */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between px-4">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-primary/70">
+                        {lang === 'en' ? 'DRAGGABLE LINKS' : 'ተንቀሳቃሽ ሊንኮች'}
+                    </h4>
+                    <span className="text-[10px] font-black text-neon">{items.length} LINKS</span>
+                </div>
+
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                >
+                    <SortableContext
+                        items={items.map(i => i.id)}
+                        strategy={verticalListSortingStrategy}
+                    >
+                        {items.map((item) => (
+                            <SortableItem
+                                key={item.id}
+                                id={item.id}
+                                link={item}
+                                onUpdate={updateItem}
+                                onRemove={removeItem}
+                                lang={lang}
+                            />
+                        ))}
+                    </SortableContext>
+                </DndContext>
+
+                <button
+                    onClick={addItem}
+                    className="w-full py-6 rounded-3xl border-2 border-dashed border-glass-stroke text-primary/70 hover:border-neon hover:text-neon hover:bg-neon/5 transition-all font-black flex items-center justify-center gap-3 group"
+                >
+                    <Plus size={20} className="group-hover:rotate-90 transition-transform" />
+                    {lang === 'en' ? 'ADD ANOTHER LINK' : 'ሌላ ሊንክ ጨምር'}
+                </button>
+            </div>
+        </div>
+    );
+}

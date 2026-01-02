@@ -23,18 +23,18 @@ export function ModernBackground() {
     return (
         <div className="fixed inset-0 -z-10 overflow-hidden bg-background transition-colors duration-500">
             {/* Cinematic GIF Background */}
-            <div className="absolute inset-0 z-0 overflow-hidden bg-black">
+            <div className="absolute inset-0 z-0 overflow-hidden bg-background">
                 <img
                     src="/1231.gif"
                     alt="Ethiopian Heritage"
-                    className="w-full h-full object-cover opacity-[0.4] dark:opacity-[0.6] contrast-110 saturate-[0.8]"
+                    className="w-full h-full object-cover opacity-[0.1] dark:opacity-[0.6] contrast-100 dark:contrast-110 saturate-[0.5] dark:saturate-[0.8]"
                     onLoad={() => console.log("GIF Loaded")}
                 />
                 {/* Professional Overlays */}
-                <div className="absolute inset-0 bg-gradient-to-b from-background via-background/40 to-background z-10" />
+                <div className="absolute inset-0 bg-gradient-to-b from-background via-background/60 dark:via-background/40 to-background z-10" />
                 {/* Central Vignette for Content Readability */}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(var(--background),0.4)_100%)] z-15" />
-                <div className="absolute inset-0 bg-emerald-950/20 dark:bg-emerald-950/30 z-20 backdrop-blur-[6px]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(var(--background),0.6)_100%)] z-15" />
+                <div className="absolute inset-0 bg-emerald-500/5 dark:bg-emerald-950/30 z-20 backdrop-blur-[4px] dark:backdrop-blur-[6px]" />
             </div>
 
             {/* Dynamic Orbs */}
@@ -64,8 +64,8 @@ export function ModernBackground() {
                 </motion.div>
             ))}
 
-            {/* Heritage Pattern Texture */}
-            <div className="absolute inset-0 heritage-pattern opacity-[0.05] dark:opacity-[0.1] z-50 pointer-events-none" />
+            {/* Heritage Pattern Texture - Reduced for light mode clarity */}
+            <div className="absolute inset-0 heritage-pattern opacity-[0.02] dark:opacity-[0.1] z-50 pointer-events-none" />
 
             {/* Scanline Effect for Cinematic Look */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] bg-[length:100%_2px,3px_100%] pointer-events-none z-50 opacity-20" />
