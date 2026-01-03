@@ -58,8 +58,8 @@ export default function BundleViewPage() {
     );
 
     return (
-        <div className="relative min-h-screen bg-background selection:bg-neon/30 text-foreground overflow-x-hidden pb-20">
-            <ModernBackground />
+        <div className="relative min-h-screen bg-background selection:bg-neon/30 text-foreground overflow-x-hidden pb-20" style={{ backgroundColor: bundle.bg_color }}>
+            <ModernBackground themeColor={bundle.theme_color} bgColor={bundle.bg_color} />
 
             <div className="max-w-2xl mx-auto px-6 pt-24 md:pt-32 space-y-12 relative z-10">
                 {/* Profile Header */}
@@ -72,20 +72,24 @@ export default function BundleViewPage() {
                         <motion.div
                             animate={{ rotate: [0, 10, -10, 0] }}
                             transition={{ duration: 6, repeat: Infinity }}
-                            className="w-24 h-24 md:w-32 md:h-32 rounded-[2.5rem] md:rounded-[3.5rem] bg-glass-deep border-4 border-neon shadow-2xl flex items-center justify-center text-primary"
+                            className="w-24 h-24 md:w-32 md:h-32 rounded-[2.5rem] md:rounded-[3.5rem] bg-glass-deep border-4 shadow-2xl flex items-center justify-center text-background"
+                            style={{ borderColor: bundle.theme_color, backgroundColor: bundle.theme_color }}
                         >
                             <Layers size={48} className="md:size-64" />
                         </motion.div>
-                        <div className="absolute -bottom-2 -right-2 bg-neon text-black text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-tighter shadow-lg border-2 border-background">
+                        <div
+                            className="absolute -bottom-2 -right-2 text-black text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-tighter shadow-lg border-2 border-background"
+                            style={{ backgroundColor: bundle.theme_color }}
+                        >
                             STUDIO V1
                         </div>
                     </div>
 
                     <div className="space-y-3">
-                        <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-contrast uppercase italic leading-none">
+                        <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic leading-none" style={{ color: bundle.title_color }}>
                             {bundle.title}
                         </h1>
-                        <p className="text-sm md:text-lg font-bold text-primary/60 italic leading-relaxed max-w-md mx-auto">
+                        <p className="text-sm md:text-lg font-bold italic leading-relaxed max-w-md mx-auto" style={{ color: bundle.text_color }}>
                             {bundle.description}
                         </p>
                     </div>
@@ -104,25 +108,44 @@ export default function BundleViewPage() {
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: i * 0.1 }}
+                                whileHover="hover"
                                 className="group relative block w-full"
                             >
-                                <div className="absolute inset-0 bg-primary/20 rounded-[2.5rem] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                <div className="relative glass-card p-6 md:p-8 rounded-[2.5rem] border-glass-stroke group-hover:border-neon group-hover:bg-neon/5 transition-all flex items-center justify-between gap-4 overflow-hidden shadow-xl active:scale-95">
+                                <motion.div
+                                    variants={{ hover: { opacity: 1, scale: 1.02 } }}
+                                    initial={{ opacity: 0, scale: 1 }}
+                                    className="absolute inset-0 rounded-[2.5rem] blur-2xl transition-opacity duration-500"
+                                    style={{ backgroundColor: bundle.theme_color + '30' }}
+                                />
+                                <motion.div
+                                    variants={{ hover: { borderColor: bundle.theme_color, backgroundColor: bundle.theme_color + '08' } }}
+                                    className="relative glass-card p-6 md:p-8 rounded-[2.5rem] border transition-colors flex items-center justify-between gap-4 overflow-hidden shadow-xl active:scale-95"
+                                    style={{ borderColor: bundle.theme_color + '20', backgroundColor: bundle.card_color }}
+                                >
                                     <div className="flex items-center gap-6">
-                                        <div className={cn("w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-glass-fill flex items-center justify-center text-primary group-hover:bg-neon group-hover:text-black transition-all group-hover:rotate-12", platform.color)}>
+                                        <motion.div
+                                            variants={{ hover: { backgroundColor: bundle.theme_color, color: '#000', rotate: 12 } }}
+                                            className={cn("w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-glass-fill flex items-center justify-center transition-all", platform.color)}
+                                        >
                                             <platform.icon size={28} />
-                                        </div>
+                                        </motion.div>
                                         <div className="min-w-0">
-                                            <h3 className="text-xl md:text-2xl font-black text-contrast tracking-tighter uppercase group-hover:text-primary transition-colors truncate">
+                                            <motion.h3
+                                                variants={{ hover: { color: bundle.theme_color } }}
+                                                className="text-xl md:text-2xl font-black tracking-tighter uppercase transition-colors truncate"
+                                                style={{ color: bundle.title_color }}
+                                            >
                                                 {item.label}
-                                            </h3>
-                                            <p className="text-[10px] font-black text-primary/40 uppercase tracking-[0.2em] truncate">
+                                            </motion.h3>
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] truncate" style={{ color: bundle.text_color + '80' }}>
                                                 {new URL(item.url).hostname}
                                             </p>
                                         </div>
                                     </div>
-                                    <ArrowRight size={24} className="text-primary/20 group-hover:text-neon group-hover:translate-x-2 transition-all shrink-0" />
-                                </div>
+                                    <motion.div variants={{ hover: { x: 8, color: bundle.theme_color } }} className="text-primary/20 transition-all">
+                                        <ArrowRight size={24} />
+                                    </motion.div>
+                                </motion.div>
                             </motion.a>
                         );
                     })}
@@ -135,12 +158,19 @@ export default function BundleViewPage() {
                     className="pt-12 border-t border-glass-stroke flex flex-col items-center gap-6 text-center"
                 >
                     <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-black uppercase tracking-[0.5em] text-primary/30 flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-[0.5em] opacity-30 flex items-center gap-2" style={{ color: bundle.text_color }}>
                             CRAFTED WITH <Heart size={12} className="text-red-500/40" /> BY ABEL BEKELE
                         </span>
                     </div>
                     <div className="flex gap-4">
-                        <a href="https://jami.bio/Abelb" target="_blank" className="px-6 py-3 rounded-2xl glass-card border-glass-stroke text-[10px] font-black uppercase tracking-widest text-primary hover:bg-neon hover:text-black transition-all">Support Creator</a>
+                        <motion.a
+                            href="https://jami.bio/Abelb"
+                            target="_blank"
+                            whileHover={{ backgroundColor: bundle.theme_color, color: '#000', scale: 1.05 }}
+                            className="px-6 py-3 rounded-2xl glass-card border-glass-stroke text-[10px] font-black uppercase tracking-widest text-primary transition-all"
+                        >
+                            Support Creator
+                        </motion.a>
                         <button onClick={() => {
                             navigator.clipboard.writeText(window.location.href);
                             alert("Link copied!");

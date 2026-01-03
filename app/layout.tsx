@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/components/auth-context";
 import { DonationWidget } from "@/components/donation-widget";
+import { CoffeeWidget } from "@/components/coffee-widget";
 import { DonationPopup } from "@/components/donation-popup";
 import { SocialSidebar } from "@/components/social-sidebar";
 import Script from "next/script";
@@ -32,11 +34,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <meta name="referrer" content="strict-origin-when-cross-origin" />
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9122247401478241"
           crossOrigin="anonymous"
           strategy="afterInteractive"
+        />
+        <Script
+          src="https://accounts.google.com/gsi/client"
+          strategy="beforeInteractive"
         />
         <ThemeProvider
           attribute="class"
@@ -44,10 +51,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <DonationWidget />
-          <DonationPopup />
-          <SocialSidebar />
+          <AuthProvider>
+            {children}
+            <CoffeeWidget />
+            <DonationWidget />
+            <DonationPopup />
+            <SocialSidebar />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

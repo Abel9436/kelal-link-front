@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ChevronLeft, Edit3, Eye, Rocket, Layout, Clock, ShieldAlert, Heart,
@@ -18,15 +18,23 @@ import Link from 'next/link';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export default function CreateBundlePage() {
+export default function EditDropPage() {
+    const { slug: initialSlug } = useParams();
     const router = useRouter();
+    const { token } = useAuth();
+
+    // Logic State
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const [result, setResult] = useState<any>(null);
+    const [error, setError] = useState("");
+    const [dropType, setDropType] = useState<"url" | "bundle" | null>(null);
+
+    // Form States - 100% PARITY with create/page.tsx
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [items, setItems] = useState([{ id: "1", label: "", url: "" }]);
     const [customSlug, setCustomSlug] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
-    const [result, setResult] = useState<any>(null);
-    const [error, setError] = useState("");
     const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
     const [lang, setLang] = useState<"en" | "am">("en");
     const [expiresIn, setExpiresIn] = useState(0);
@@ -41,69 +49,123 @@ export default function CreateBundlePage() {
     const [cardColor, setCardColor] = useState("rgba(255,255,255,0.05)");
     const [metaTitle, setMetaTitle] = useState("");
     const [metaDescription, setMetaDescription] = useState("");
-    const { token } = useAuth();
+    const [longUrl, setLongUrl] = useState("");
 
     useEffect(() => {
         const savedLang = localStorage.getItem("app_lang");
-        if (savedLang === "am" || savedLang === "en") setLang(savedLang);
-    }, []);
+        if (savedLang === "am" || savedLang === "en") setLang(savedLang as any);
 
-    const handleCreate = async () => {
-        setIsLoading(true);
+        const fetchDrop = async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/drop/${initialSlug}`, {
+                    headers: token ? { "Authorization": `Bearer ${token}` } : {}
+                });
+                if (!res.ok) {
+                    if (res.status === 404) router.push("/dashboard");
+                    throw new Error("Failed to load drop details");
+                }
+
+                const data = await res.json();
+                setDropType(data.type);
+                setCustomSlug(data.slug);
+                setMaxClicks(data.max_clicks || 0);
+
+                if (data.type === 'bundle') {
+                    setTitle(data.title);
+                    setDescription(data.description || "");
+                    if (data.items && data.items.length > 0) {
+                        setItems(data.items.map((it: any, idx: number) => ({ ...it, id: String(idx + 1) })));
+                    } else {
+                        setItems([{ id: "1", label: "", url: "" }]);
+                    }
+                    setThemeColor(data.theme_color || "#00f2ff");
+                    setBgColor(data.bg_color || "#0a0a0a");
+                    setTextColor(data.text_color || "#888888");
+                    setTitleColor(data.title_color || "#ffffff");
+                    setCardColor(data.card_color || "rgba(255,255,255,0.05)");
+                    setMetaTitle(data.meta_title || "");
+                    setMetaDescription(data.meta_description || "");
+                } else {
+                    setLongUrl(data.long_url);
+                }
+            } catch (err: any) {
+                setError(err.message);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        if (token && initialSlug) fetchDrop();
+    }, [initialSlug, token, router]);
+
+    const handleSave = async () => {
+        setIsSaving(true);
         setError("");
         try {
-            const res = await fetch(`${API_URL}/bundle`, {
-                method: "POST",
+            const endpoint = dropType === "bundle" ? `${API_URL}/api/bundle/${initialSlug}` : `${API_URL}/api/url/${initialSlug}`;
+            const body: any = {
+                custom_slug: customSlug || undefined,
+                max_clicks: maxClicks > 0 ? maxClicks : 0,
+                expires_at: (expiresIn === -1 && customExpiry) ? new Date(customExpiry).toISOString() : undefined,
+                password: password || undefined,
+                meta_title: metaTitle || undefined,
+                meta_description: metaDescription || undefined,
+            };
+
+            if (dropType === 'bundle') {
+                body.title = title;
+                body.description = description;
+                body.items = items.filter(i => i.url && i.label).map(({ label, url }) => ({ label, url }));
+                body.theme_color = themeColor;
+                body.bg_color = bgColor;
+                body.text_color = textColor;
+                body.title_color = titleColor;
+                body.card_color = cardColor;
+            } else {
+                body.long_url = longUrl;
+            }
+
+            const res = await fetch(endpoint, {
+                method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    ...(token ? { "Authorization": `Bearer ${token}` } : {})
+                    "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    title,
-                    description,
-                    items: items.filter(i => i.url && i.label).map(({ label, url }) => ({ label, url })),
-                    theme_color: themeColor,
-                    bg_color: bgColor,
-                    text_color: textColor,
-                    title_color: titleColor,
-                    card_color: cardColor,
-                    custom_slug: customSlug || undefined,
-                    max_clicks: maxClicks > 0 ? maxClicks : undefined,
-                    expires_in: expiresIn > 0 ? expiresIn : undefined,
-                    expires_at: (expiresIn === -1 && customExpiry) ? new Date(customExpiry).toISOString() : undefined,
-                    password: password || undefined,
-                    meta_title: metaTitle || undefined,
-                    meta_description: metaDescription || undefined,
-                }),
+                body: JSON.stringify(body),
             });
+
             if (!res.ok) {
                 const data = await res.json();
-                throw new Error(data.detail || "Creation failed");
+                throw new Error(data.detail || "Update failed");
             }
             const data = await res.json();
             setResult(data);
 
-            // Add to history
-            const saved = localStorage.getItem("recent_urls");
-            const history = saved ? JSON.parse(saved) : [];
-            const updated = [data, ...history.filter((u: any) => u.slug !== data.slug)];
-            localStorage.setItem("recent_urls", JSON.stringify(updated.slice(0, 50)));
+            if (data.slug !== initialSlug) {
+                window.history.replaceState(null, "", `/edit/${data.slug}`);
+            }
         } catch (err: any) {
             setError(err.message);
         } finally {
-            setIsLoading(false);
+            setIsSaving(false);
         }
     };
+
+    if (isLoading) return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+    );
 
     return (
         <div className="relative min-h-screen bg-background text-foreground font-sans selection:bg-neon/30 overflow-hidden">
             <ModernBackground themeColor={themeColor} bgColor={bgColor} />
 
-            {/* Top Navigation */}
+            {/* Top Navigation - Exact parity with create/page.tsx */}
             <nav className="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-background/5 backdrop-blur-xl border-b border-glass-stroke">
                 <div className="flex items-center gap-4">
                     <button
-                        onClick={() => router.push("/")}
+                        onClick={() => router.push(token ? "/dashboard" : "/")}
                         className="p-3 rounded-2xl bg-glass-fill hover:bg-glass-stroke transition-colors text-primary/80 hover:text-primary"
                     >
                         <ChevronLeft size={20} />
@@ -131,11 +193,11 @@ export default function CreateBundlePage() {
                         </button>
                     </div>
                     <button
-                        onClick={handleCreate}
-                        disabled={isLoading || !title || items.filter(i => i.url).length === 0}
+                        onClick={handleSave}
+                        disabled={isSaving || (dropType === 'bundle' && (!title || items.filter(i => i.url).length === 0)) || (dropType === 'url' && !longUrl)}
                         className="bg-primary hover:bg-neon hover:text-black hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 text-background px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-primary/20 flex items-center gap-2"
                     >
-                        {isLoading ? <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" /> : <Rocket size={16} />}
+                        {isSaving ? <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" /> : <Rocket size={16} />}
                         {lang === 'en' ? 'Live Now' : 'አሁኑኑ ልቀቅ'}
                     </button>
                     <UserMenu />
@@ -158,17 +220,45 @@ export default function CreateBundlePage() {
                                 </h1>
                             </div>
 
-                            <BundleBuilder
-                                title={title}
-                                setTitle={setTitle}
-                                description={description}
-                                setDescription={setDescription}
-                                items={items}
-                                setItems={setItems}
-                                lang={lang}
-                            />
+                            {dropType === 'bundle' ? (
+                                <BundleBuilder
+                                    title={title}
+                                    setTitle={setTitle}
+                                    description={description}
+                                    setDescription={setDescription}
+                                    items={items}
+                                    setItems={setItems}
+                                    lang={lang}
+                                />
+                            ) : (
+                                <div className="space-y-8">
+                                    <div className="glass-card p-10 rounded-[40px] border-glass-stroke shadow-xl space-y-8">
+                                        <div className="flex items-center gap-4">
+                                            <div className="p-3 rounded-2xl bg-primary/10 text-primary">
+                                                <Globe size={20} />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-black uppercase tracking-widest text-contrast">{lang === 'en' ? 'Target Destination' : 'ዋናው ሊንክ'}</span>
+                                                <span className="text-[8px] font-bold text-primary/50 uppercase tracking-[0.2em]">Redirect target node</span>
+                                            </div>
+                                        </div>
+                                        <div className="relative group/input">
+                                            <div className="flex items-center bg-glass-fill border-2 border-glass-stroke rounded-[24px] px-8 focus-within:border-primary transition-all">
+                                                <Rocket size={16} className="text-primary/20 group-focus-within/input:text-primary mr-4" />
+                                                <input
+                                                    type="url"
+                                                    placeholder="Target URL (e.g. https://google.com)"
+                                                    value={longUrl}
+                                                    onChange={(e) => setLongUrl(e.target.value)}
+                                                    className="flex-1 bg-transparent py-5 text-sm font-black outline-none text-contrast"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
-                            {/* Visual Identity */}
+                            {/* Visual Identity - Exact grid parity */}
                             <div className="space-y-8">
                                 <div className="flex items-center gap-4">
                                     <div className="h-px flex-1 bg-glass-stroke" />
@@ -277,7 +367,7 @@ export default function CreateBundlePage() {
                                         </div>
                                     </div>
 
-                                    {/* Security & Access */}
+                                    {/* Identity & Control */}
                                     <div className="glass-card p-10 rounded-[40px] border-glass-stroke space-y-8 shadow-xl bg-black/40">
                                         <div className="flex items-center gap-4">
                                             <div className="p-3 rounded-2xl bg-primary/10 text-primary">
@@ -375,7 +465,7 @@ export default function CreateBundlePage() {
                         </div>
                     </div>
 
-                    {/* Right: Live Preview */}
+                    {/* Right: Live Preview - 100% PARITY WITH create/page.tsx */}
                     <div className={cn(
                         "lg:col-span-5 h-full flex flex-col items-center justify-center relative",
                         activeTab === 'edit' ? 'hidden lg:flex' : 'flex'
@@ -395,7 +485,7 @@ export default function CreateBundlePage() {
                             ))}
                         </div>
 
-                        {/* Device Frame */}
+                        {/* Device Frame - Matching create/page.tsx strictly */}
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -419,12 +509,12 @@ export default function CreateBundlePage() {
                                     </div>
 
                                     <div className="text-center space-y-2">
-                                        <h3 className="text-2xl font-black tracking-tighter italic" style={{ color: titleColor }}>{title || (lang === 'en' ? "Your Brand Name" : "የልዩ ስምዎ")}</h3>
-                                        <p className="text-xs font-bold leading-relaxed italic" style={{ color: textColor }}>{description || (lang === 'en' ? "Professional Identity Studio" : "ፕሮፌሽናል ዲጂታል መለያ")}</p>
+                                        <h3 className="text-2xl font-black tracking-tighter italic" style={{ color: titleColor }}>{dropType === 'bundle' ? (title || (lang === 'en' ? "Your Brand Name" : "የልዩ ስምዎ")) : "DESTINATION NODE"}</h3>
+                                        <p className="text-xs font-bold leading-relaxed italic" style={{ color: textColor }}>{dropType === 'bundle' ? (description || (lang === 'en' ? "Professional Identity Studio" : "ፕሮፌሽናል ዲጂታል መለያ")) : "REDETECTED NODE"}</p>
                                     </div>
 
                                     <div className="w-full space-y-4">
-                                        {items.map((item, i) => {
+                                        {dropType === 'bundle' ? items.map((item, i) => {
                                             const platform = getPlatformInfo(item.url);
                                             return (
                                                 <div
@@ -447,7 +537,12 @@ export default function CreateBundlePage() {
                                                     <ArrowRight size={14} className="text-primary/20 group-hover/preview-item:translate-x-1 transition-transform" style={{ color: themeColor }} />
                                                 </div>
                                             );
-                                        })}
+                                        }) : (
+                                            <div className="p-8 rounded-[32px] border-2 border-neon/20 bg-neon/5 text-center">
+                                                <Globe size={32} className="mx-auto text-neon opacity-40 mb-2" />
+                                                <p className="text-[10px] font-black text-contrast truncate italic uppercase tracking-widest">{longUrl || "https://..."}</p>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Footer */}
@@ -462,6 +557,7 @@ export default function CreateBundlePage() {
                 </div>
             </main>
 
+            {/* Success Modal - 100% PARITY WITH create/page.tsx */}
             <AnimatePresence>
                 {result && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-12">
@@ -478,19 +574,19 @@ export default function CreateBundlePage() {
                                 </div>
                                 <div className="space-y-4">
                                     <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-contrast italic uppercase leading-none">
-                                        Studio Masterpiece <br /> <span className="text-neon">IS LIVE</span>
+                                        Studio Masterpiece <br /> <span className="text-neon">SYNCHRONIZED</span>
                                     </h2>
-                                    <p className="text-primary/80 font-medium text-lg italic">Your professional link hub is ready to dominate the digital landscape.</p>
+                                    <p className="text-primary/80 font-medium text-lg italic">Your professional identity evolution is complete and live across the digital landscape.</p>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="bg-glass-fill rounded-[32px] p-8 border-2 border-neon flex items-center justify-between gap-6 group">
                                         <div className="flex-1 text-left">
                                             <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/40 block mb-2">STUDIO LINK</span>
-                                            <span className="text-xl md:text-2xl font-black tracking-tighter text-contrast truncate select-all">{`${window.location.host}/bundle/${decodeURIComponent(result.slug)}`}</span>
+                                            <span className="text-xl md:text-2xl font-black tracking-tighter text-contrast truncate select-all">{`${window.location.host}/${dropType === 'bundle' ? 'bundle/' : ''}${decodeURIComponent(result.slug)}`}</span>
                                         </div>
                                         <button
                                             onClick={() => {
-                                                navigator.clipboard.writeText(`${window.location.protocol}//${window.location.host}/bundle/${result.slug}`);
+                                                navigator.clipboard.writeText(`${window.location.protocol}//${window.location.host}/${dropType === 'bundle' ? 'bundle/' : ''}${result.slug}`);
                                             }}
                                             className="p-5 rounded-2xl bg-neon text-background hover:scale-110 transition-transform active:scale-95 shadow-lg group-hover:shadow-neon/40"
                                         >
@@ -520,8 +616,8 @@ export default function CreateBundlePage() {
                                 </div>
 
                                 <div className="flex flex-col sm:flex-row gap-4 pt-6">
-                                    <Link href={`/bundle/${result.slug}`} className="flex-1 bg-white text-black font-black py-6 rounded-[24px] transition-all shadow-xl text-sm uppercase tracking-widest flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95">
-                                        View Live Studio <ExternalLink size={18} />
+                                    <Link href={`/${dropType === 'bundle' ? 'bundle/' : ''}${result.slug}`} className="flex-1 bg-white text-black font-black py-6 rounded-[24px] transition-all shadow-xl text-sm uppercase tracking-widest flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95">
+                                        View Live Drop <ExternalLink size={18} />
                                     </Link>
                                     <button onClick={() => setResult(null)} className="flex-1 bg-glass-fill border border-glass-stroke text-contrast font-black py-6 rounded-[24px] hover:bg-glass-stroke transition-all text-sm uppercase tracking-widest">
                                         Return to Editor

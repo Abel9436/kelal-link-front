@@ -19,7 +19,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
-import { GripVertical, Trash2, Plus, Link as LinkIcon, Type, Sparkles } from 'lucide-react';
+import { GripVertical, Trash2, Plus, Link as LinkIcon, Type, Sparkles, Shuffle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getPlatformInfo } from '@/lib/platforms';
 
@@ -54,9 +54,10 @@ function SortableItem({ id, link, onUpdate, onRemove, lang }: SortableItemProps)
     };
 
     return (
-        <div
+        <motion.div
             ref={setNodeRef}
             style={style}
+            layout
             className={cn(
                 "group relative glass-card p-4 rounded-3xl border-glass-stroke transition-all mb-4",
                 isDragging ? "opacity-50 ring-2 ring-primary scale-105 shadow-2xl" : "hover:border-primary/20"
@@ -113,7 +114,7 @@ function SortableItem({ id, link, onUpdate, onRemove, lang }: SortableItemProps)
                     <Trash2 size={20} />
                 </button>
             </div>
-        </div>
+        </motion.div>
     );
 }
 
@@ -167,6 +168,11 @@ export function BundleBuilder({
         setItems([...items, { id: Math.random().toString(36).substr(2, 9), label: '', url: '' }]);
     };
 
+    const shuffleItems = () => {
+        const shuffled = [...items].sort(() => Math.random() - 0.5);
+        setItems(shuffled);
+    };
+
     return (
         <div className="space-y-8">
             {/* Profile Section */}
@@ -215,7 +221,16 @@ export function BundleBuilder({
                     <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-primary/70">
                         {lang === 'en' ? 'DRAGGABLE LINKS' : 'ተንቀሳቃሽ ሊንኮች'}
                     </h4>
-                    <span className="text-[10px] font-black text-neon">{items.length} LINKS</span>
+                    <div className="flex items-center gap-6">
+                        <button
+                            onClick={shuffleItems}
+                            className="flex items-center gap-2 text-[10px] font-black text-primary/40 hover:text-neon transition-colors uppercase tracking-widest group/shuffle"
+                        >
+                            <Shuffle size={12} className="group-hover/shuffle:rotate-180 transition-transform duration-500" />
+                            {lang === 'en' ? 'SHUFFLE Order' : 'ቅደም ተከተል ቀይር'}
+                        </button>
+                        <span className="text-[10px] font-black text-neon">{items.length} LINKS</span>
+                    </div>
                 </div>
 
                 <DndContext

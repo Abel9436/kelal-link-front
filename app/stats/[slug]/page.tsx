@@ -89,7 +89,7 @@ export default function StatsPage() {
                             </div>
                         </div>
                         <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter text-contrast italic break-all sm:break-normal">
-                            {t.title} <span className="text-primary dark:text-neon">/{slug}</span>
+                            {t.title} <span className="text-primary dark:text-neon">/{decodeURIComponent(slug)}</span>
                         </h1>
                         <p className="text-primary font-black text-[10px] md:text-xs uppercase tracking-[0.5em]">{t.subtitle}</p>
                     </div>

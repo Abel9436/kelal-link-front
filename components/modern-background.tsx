@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 const AMHARIC_CHARS = "ሀለሐመሠረሰሸቀበተቸኀነኘአከኸወዐዘዠየደጀገጠጨጰጸፀፈፐ";
 
-export function ModernBackground() {
+export function ModernBackground({ themeColor = "#10b981", bgColor }: { themeColor?: string; bgColor?: string }) {
     const [elements, setElements] = useState<{ id: number; char: string; x: number; y: number; size: number; duration: number }[]>([]);
 
     useEffect(() => {
@@ -21,25 +21,32 @@ export function ModernBackground() {
     }, []);
 
     return (
-        <div className="fixed inset-0 -z-10 overflow-hidden bg-background transition-colors duration-500">
+        <div
+            className="fixed inset-0 -z-10 overflow-hidden bg-background transition-colors duration-500"
+            style={bgColor ? { backgroundColor: bgColor } : {}}
+        >
             {/* Cinematic GIF Background */}
-            <div className="absolute inset-0 z-0 overflow-hidden bg-background">
-                <img
-                    src="/1231.gif"
-                    alt="Ethiopian Heritage"
-                    className="w-full h-full object-cover opacity-[0.1] dark:opacity-[0.6] contrast-100 dark:contrast-110 saturate-[0.5] dark:saturate-[0.8]"
-                    onLoad={() => console.log("GIF Loaded")}
+            <div className="absolute inset-0 z-0 overflow-hidden bg-background" style={bgColor ? { backgroundColor: bgColor } : {}}>
+                {/* Cinematic Depth Orbs */}
+                <div
+                    className="absolute top-1/4 left-1/4 w-[60%] h-[60%] rounded-full blur-[120px] animate-pulse opacity-10 dark:opacity-20"
+                    style={{ backgroundColor: themeColor }}
                 />
+                <div
+                    className="absolute bottom-1/4 right-1/4 w-[60%] h-[60%] rounded-full blur-[120px] animate-pulse-slow opacity-10 dark:opacity-20"
+                    style={{ backgroundColor: themeColor }}
+                />
+
                 {/* Professional Overlays */}
                 <div className="absolute inset-0 bg-gradient-to-b from-background via-background/60 dark:via-background/40 to-background z-10" />
                 {/* Central Vignette for Content Readability */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(var(--background),0.6)_100%)] z-15" />
-                <div className="absolute inset-0 bg-emerald-500/5 dark:bg-emerald-950/30 z-20 backdrop-blur-[4px] dark:backdrop-blur-[6px]" />
+                <div className="absolute inset-0 z-20 backdrop-blur-[4px] dark:backdrop-blur-[6px] opacity-10" style={{ backgroundColor: themeColor }} />
             </div>
 
             {/* Dynamic Orbs */}
-            <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 blur-[120px] z-30" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-green-600/10 dark:bg-green-600/20 blur-[120px] z-30" />
+            <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] z-30 opacity-10" style={{ backgroundColor: themeColor }} />
+            <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] z-30 opacity-10" style={{ backgroundColor: themeColor }} />
 
             {/* Floating Amharic Characters */}
             {elements.map((el) => (
@@ -47,7 +54,7 @@ export function ModernBackground() {
                     key={el.id}
                     initial={{ opacity: 0, y: "100vh" }}
                     animate={{
-                        opacity: [0, 0.15, 0],
+                        opacity: [0, 0.1, 0],
                         y: ["100vh", "-10vh"],
                         x: [`${el.x}vw`, `${el.x + (Math.random() * 10 - 5)}vw`],
                         rotate: [0, 360]
@@ -57,17 +64,17 @@ export function ModernBackground() {
                         repeat: Infinity,
                         ease: "linear",
                     }}
-                    className="absolute pointer-events-none text-emerald-600/20 dark:text-emerald-400/15 font-bold select-none z-40"
-                    style={{ fontSize: el.size }}
+                    className="absolute pointer-events-none font-bold select-none z-40"
+                    style={{ fontSize: el.size, color: themeColor }}
                 >
                     {el.char}
                 </motion.div>
             ))}
 
-            {/* Heritage Pattern Texture - Reduced for light mode clarity */}
+            {/* Heritage Pattern Texture */}
             <div className="absolute inset-0 heritage-pattern opacity-[0.02] dark:opacity-[0.1] z-50 pointer-events-none" />
 
-            {/* Scanline Effect for Cinematic Look */}
+            {/* Scanline Effect */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] bg-[length:100%_2px,3px_100%] pointer-events-none z-50 opacity-20" />
         </div>
     );

@@ -10,99 +10,134 @@ export function DonationPopup() {
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
-        // Show after a short delay for maximum impact
-        const timer = setTimeout(() => {
-            const hasSeen = sessionStorage.getItem('has_seen_donation');
-            if (!hasSeen) {
+        const checkAndShow = () => {
+            const lastClosed = localStorage.getItem('last_donation_closed');
+            const now = Date.now();
+            const cooldown = 20 * 60 * 1000; // Clinical 20-minute cooldown
+
+            if (!lastClosed || now - parseInt(lastClosed) > cooldown) {
                 setIsOpen(true);
             }
-        }, 1500);
-        return () => clearTimeout(timer);
+        };
+
+        // Initial cinematic trigger
+        const timer = setTimeout(checkAndShow, 2000);
+
+        // Background persistence check every minute
+        const interval = setInterval(checkAndShow, 60000);
+
+        return () => {
+            clearTimeout(timer);
+            clearInterval(interval);
+        };
     }, []);
 
     const handleClose = () => {
         setIsOpen(false);
-        sessionStorage.setItem('has_seen_donation', 'true');
+        localStorage.setItem('last_donation_closed', Date.now().toString());
     };
 
     return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
-                    {/* Backdrop */}
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                    {/* High-Fidelity Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={handleClose}
-                        className="absolute inset-0 bg-background/90 md:bg-background/80 backdrop-blur-md"
+                        className="absolute inset-0 bg-[#020817]/80 backdrop-blur-xl"
                     />
 
-                    {/* Modal Content */}
+                    {/* Premium Modal Architecture */}
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="relative w-full max-w-lg bg-white/95 dark:bg-background/40 border-2 border-primary/20 dark:border-primary/10 backdrop-blur-2xl rounded-[48px] p-8 md:p-12 shadow-[0_50px_100px_rgba(0,0,0,0.15)] dark:shadow-[0_50px_100px_rgba(var(--primary),0.2)] overflow-hidden"
+                        initial={{ opacity: 0, scale: 0.9, y: 40, rotateX: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 40, rotateX: 20 }}
+                        transition={{ type: "spring", damping: 20, stiffness: 100 }}
+                        className="relative w-full max-w-xl bg-glass-fill border-2 border-glass-stroke backdrop-blur-3xl rounded-[60px] p-10 md:p-16 shadow-[0_80px_160px_rgba(0,0,0,0.4)] overflow-hidden"
                     >
-                        {/* Dynamic Background Accents */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] -translate-y-1/2 translate-x-1/2" />
-                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-neon/10 blur-[100px] translate-y-1/2 -translate-x-1/2" />
+                        {/* Dynamic Luminescence */}
+                        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/20 blur-[120px] -translate-y-1/2 translate-x-1/2 rounded-full" />
+                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-neon/15 blur-[120px] translate-y-1/2 -translate-x-1/2 rounded-full" />
 
                         <button
                             onClick={handleClose}
-                            className="absolute top-8 right-8 text-primary/40 hover:text-neon transition-colors"
+                            className="absolute top-10 right-10 p-3 rounded-2xl hover:bg-glass-stroke text-primary/40 hover:text-neon transition-all"
                         >
                             <X size={24} />
                         </button>
 
-                        <div className="relative z-10 space-y-8 text-center">
-                            <div className="flex justify-center">
+                        <div className="relative z-10 space-y-12 text-center">
+                            <div className="flex justify-center flex-col items-center gap-6">
                                 <motion.div
                                     animate={{
-                                        rotate: [0, 10, -10, 0],
-                                        scale: [1, 1.1, 1]
+                                        rotate: [0, 5, -5, 0],
+                                        scale: [1, 1.05, 1],
+                                        boxShadow: [
+                                            "0 0 20px rgba(var(--primary),0.2)",
+                                            "0 0 40px rgba(var(--primary),0.4)",
+                                            "0 0 20px rgba(var(--primary),0.2)"
+                                        ]
                                     }}
-                                    transition={{ duration: 4, repeat: Infinity }}
-                                    className="w-24 h-24 rounded-[2rem] bg-gradient-to-tr from-primary to-neon flex items-center justify-center text-background shadow-2xl"
+                                    transition={{ duration: 5, repeat: Infinity }}
+                                    className="w-28 h-28 rounded-[2.5rem] bg-gradient-to-br from-primary via-primary/80 to-neon flex items-center justify-center text-background shadow-2xl relative group"
                                 >
-                                    <Heart size={40} fill="currentColor" />
+                                    <div className="absolute inset-0 rounded-[2.5rem] bg-white opacity-20 blur-xl group-hover:opacity-40 transition-opacity" />
+                                    <Heart size={48} fill="currentColor" className="relative z-10" />
                                 </motion.div>
+                                <div className="px-5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black text-primary uppercase tracking-[0.4em]">Proprietary Excellence</div>
                             </div>
 
-                            <div className="space-y-4">
-                                <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-contrast uppercase italic leading-tight">
-                                    Support My <br /> <span className="text-neon">Code Journey</span>
+                            <div className="space-y-6">
+                                <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-contrast uppercase italic leading-[0.9] text-balance">
+                                    FUEL THE <br /> <span className="text-neon underline decoration-neon/30 underline-offset-8">STUDIO ARCHIVE</span>
                                 </h2>
-                                <p className="text-foreground/60 font-medium leading-relaxed max-w-sm mx-auto italic">
-                                    "I build tools to simplify your digital life. If ቀላል Link has helped you, consider fueling more innovation with a small donation."
+                                <p className="text-foreground/70 text-lg md:text-xl font-bold leading-relaxed max-w-md mx-auto italic">
+                                    "I curate high-performance tools for your digital excellence. If Studio has elevated your workflow, consider a masterpiece contribution."
                                 </p>
                             </div>
 
-                            <div className="flex flex-col gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <motion.a
+                                    href="https://buymeacoffee.com/abeltech"
+                                    target="_blank"
+                                    whileHover={{ scale: 1.02, y: -5 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="group relative h-20 rounded-[2rem] bg-primary text-background font-black uppercase tracking-widest text-sm shadow-2xl shadow-primary/40 flex items-center justify-center gap-4 overflow-hidden"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                                    <Coffee size={24} />
+                                    <span>COFFEE FUEL</span>
+                                </motion.a>
+
                                 <motion.a
                                     href="https://jami.bio/Abelb"
                                     target="_blank"
-                                    whileHover={{ scale: 1.02 }}
+                                    whileHover={{ scale: 1.02, y: -5 }}
                                     whileTap={{ scale: 0.98 }}
-                                    className="w-full py-6 rounded-[2rem] bg-primary text-background font-black uppercase tracking-widest text-sm shadow-2xl shadow-primary/30 hover:bg-neon transition-all flex items-center justify-center gap-4"
+                                    className="group relative h-20 rounded-[2rem] bg-glass-fill border-2 border-glass-stroke text-contrast font-black uppercase tracking-widest text-sm hover:border-neon transition-all flex items-center justify-center gap-4"
                                 >
-                                    SUPPORT ON JAMI <Heart size={18} fill="currentColor" className="animate-pulse" />
+                                    <div className="w-10 h-10 rounded-xl bg-neon/10 flex items-center justify-center text-neon group-hover:bg-neon group-hover:text-background transition-colors">
+                                        <Heart size={20} fill="currentColor" />
+                                    </div>
+                                    <span>JAMI DROP</span>
                                 </motion.a>
-
-                                <button
-                                    onClick={handleClose}
-                                    className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/40 hover:text-primary transition-colors"
-                                >
-                                    MAYBE LATER • ይቀጥሉ
-                                </button>
                             </div>
 
-                            <div className="pt-4 flex items-center justify-center gap-6 text-primary/20">
-                                <Coffee size={20} />
-                                <Sparkles size={20} />
-                                <Gift size={20} />
-                            </div>
+                            <button
+                                onClick={() => {
+                                    handleClose();
+                                    // Trigger the sign-in flow if user is not authenticated
+                                    // This is handled via a shared custom event or by simply letting the user
+                                    // click the main button, but let's make it work directly if possible.
+                                    window.dispatchEvent(new CustomEvent('trigger-studio-login'));
+                                }}
+                                className="text-[10px] font-black uppercase tracking-[0.5em] text-primary/30 hover:text-primary transition-all hover:tracking-[0.7em]"
+                            >
+                                CONTINUE TO STUDIO • ይቀጥሉ
+                            </button>
                         </div>
                     </motion.div>
                 </div>

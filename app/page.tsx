@@ -12,11 +12,13 @@ import {
     Smartphone, MousePointer2, Fingerprint, Activity,
     BarChart2, Trash2, ShieldAlert, Clock, Lock,
     ChevronRight, Mail, Send, Share2, Heart,
-    Activity as ActivityIcon, Shield
+    Activity as ActivityIcon, Shield, Coffee
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { ModernBackground } from "@/components/modern-background";
 import { cn } from "@/lib/utils";
+import { UserMenu } from "@/components/user-menu";
+import { useAuth } from "@/components/auth-context";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const AMHARIC_CHARS = "ሀለሐመሠረሰሸቀበተቸኀነኘአከኸወዐዘዠየደጀገጠጨጰጸፀፈፐ";
@@ -177,6 +179,9 @@ export default function Home() {
     const [showQr, setShowQr] = useState(false);
     const [historyFilter, setHistoryFilter] = useState<"all" | "url" | "bundle" | "top">("all");
     const [historyLimit, setHistoryLimit] = useState(10);
+    const [metaTitle, setMetaTitle] = useState("");
+    const [metaDescription, setMetaDescription] = useState("");
+    const { token } = useAuth();
 
     const clearHistory = () => {
         if (confirm(lang === "en" ? "Clear all local history?" : "ሁሉንም ታሪክ ማጽዳት ይፈልጋሉ?")) {
@@ -222,7 +227,10 @@ export default function Home() {
         try {
             const res = await fetch(`${API_URL}/shorten`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { "Authorization": `Bearer ${token}` } : {})
+                },
                 body: JSON.stringify({
                     long_url: longUrl,
                     custom_slug: customSlug || undefined,
@@ -230,6 +238,8 @@ export default function Home() {
                     expires_at: (expiresIn === -1 && customExpiry) ? new Date(customExpiry).toISOString() : undefined,
                     max_clicks: maxClicks > 0 ? maxClicks : undefined,
                     password: password || undefined,
+                    meta_title: metaTitle || undefined,
+                    meta_description: metaDescription || undefined,
                 }),
             });
 
@@ -294,6 +304,7 @@ export default function Home() {
                             </motion.div>
                         </AnimatePresence>
                     </button>
+                    <UserMenu />
                 </div>
             </nav>
 
@@ -366,6 +377,33 @@ export default function Home() {
                                                 <div className="relative group/field">
                                                     <div className="absolute inset-y-0 left-6 flex items-center text-primary group-focus-within/field:text-neon transition-colors z-10"><Lock size={20} /></div>
                                                     <input type="password" placeholder={t.inputPasswordPlaceholder} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full input-style rounded-[24px] py-7 pl-16 pr-8 text-lg font-bold placeholder:text-foreground/30 outline-none transition-all shadow-inner backdrop-blur-sm relative z-0 border-2 border-glass-stroke focus:border-neon text-foreground" />
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-6 p-8 rounded-3xl bg-orange-500/5 border border-orange-500/10 transition-all">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <Share2 size={18} className="text-orange-500" />
+                                                    <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-orange-500">SEO & Social Mastery</h4>
+                                                </div>
+                                                <div className="space-y-4">
+                                                    <div className="relative group/field">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Preview Title..."
+                                                            value={metaTitle}
+                                                            onChange={(e) => setMetaTitle(e.target.value)}
+                                                            className="w-full bg-glass-fill border-2 border-glass-stroke rounded-2xl py-4 px-6 text-sm font-bold outline-none focus:border-orange-500 transition-all text-contrast"
+                                                        />
+                                                    </div>
+                                                    <div className="relative group/field">
+                                                        <textarea
+                                                            rows={2}
+                                                            placeholder="Social Description..."
+                                                            value={metaDescription}
+                                                            onChange={(e) => setMetaDescription(e.target.value)}
+                                                            className="w-full bg-glass-fill border-2 border-glass-stroke rounded-2xl py-4 px-6 text-sm font-bold outline-none focus:border-orange-500 transition-all text-contrast resize-none"
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -460,7 +498,14 @@ export default function Home() {
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center gap-3 mb-2">
                                                 <span className="text-xl md:text-3xl font-black text-primary truncate">{u.slug}</span>
-                                                {(u.title || Array.isArray(u.items)) && <span className="text-[10px] font-black py-1 px-3 rounded-full bg-primary/10 text-primary uppercase tracking-widest border border-primary/10 italic flex items-center gap-1"><Layers size={10} /> STUDIO</span>}
+                                                {(u.title || Array.isArray(u.items)) && (
+                                                    <span
+                                                        className="text-[10px] font-black py-1 px-3 rounded-full uppercase tracking-widest italic flex items-center gap-1 border border-white/5 transition-colors"
+                                                        style={{ backgroundColor: (u.theme_color || '#00f2ff') + '20', color: u.theme_color || '#00f2ff' }}
+                                                    >
+                                                        <Layers size={10} /> STUDIO
+                                                    </span>
+                                                )}
                                             </div>
                                             <p className="text-foreground/40 text-[11px] md:text-sm truncate font-bold font-mono">{u.title || u.long_url || "Untitled Drop"}</p>
                                         </div>
@@ -521,6 +566,8 @@ export default function Home() {
                                 <a href="https://abelo.tech" target="_blank" className="px-8 py-5 rounded-2xl bg-primary text-background font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl flex items-center gap-3 group">{t.viewPortfolio} <ExternalLink size={20} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" /></a>
                                 <div className="flex gap-2">
                                     {[
+                                        { icon: <Coffee size={20} />, url: "https://buymeacoffee.com/abeltech" },
+                                        { icon: <Heart size={20} />, url: "https://jami.bio/Abelb" },
                                         { icon: <Linkedin size={20} />, url: "https://www.linkedin.com/in/abelabekele" },
                                         { icon: <GithubIcon size={20} />, url: "https://github.com/Abel9436" },
                                         { icon: <Twitter size={20} />, url: "https://x.com/abelbk007" },
@@ -556,6 +603,77 @@ export default function Home() {
                 <span className="text-[10px] font-black uppercase tracking-[0.6em] text-primary/60 px-8 animate-pulse italic">{t.scrollHint}</span>
                 {AMHARIC_CHARS.split("").slice(-5).map((c, i) => <span key={i} className="text-primary font-black text-xl">{c}</span>)}
             </div>
+
+            {/* Success Modal */}
+            <AnimatePresence>
+                {result && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-12">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setResult(null)} className="absolute inset-0 bg-background/80 backdrop-blur-xl" />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            className="relative w-full max-w-2xl bg-glass-card p-8 md:p-16 rounded-[48px] border border-neon/40 shadow-[0_50px_100px_rgba(var(--neon),0.2)] text-center overflow-hidden"
+                        >
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-neon/10 blur-[100px] -translate-y-1/2 translate-x-1/2" />
+                            <div className="relative z-10 space-y-10">
+                                <div className="w-24 h-24 rounded-[2.5rem] bg-neon flex items-center justify-center text-background mx-auto shadow-[0_0_30px_rgba(var(--accent-neon),0.5)]">
+                                    <Check size={48} />
+                                </div>
+                                <div className="space-y-4">
+                                    <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-contrast italic uppercase leading-none">
+                                        Studio Drop <br /> <span className="text-neon">SECURED</span>
+                                    </h2>
+                                    <p className="text-primary/80 font-medium text-lg italic">Your professional link evolution is complete and live across the digital landscape.</p>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="bg-glass-fill rounded-[32px] p-8 border-2 border-neon flex items-center justify-between gap-6 group">
+                                        <div className="flex-1 text-left">
+                                            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/40 block mb-2">STUDIO LINK</span>
+                                            <span className="text-xl md:text-2xl font-black tracking-tighter text-contrast truncate select-all">{`${window.location.host}/${decodeURIComponent(result.slug)}`}</span>
+                                        </div>
+                                        <button
+                                            onClick={() => copyToClipboard(`${window.location.protocol}//${window.location.host}/${result.slug}`)}
+                                            className="p-5 rounded-2xl bg-neon text-background hover:scale-110 transition-transform active:scale-95 shadow-lg group-hover:shadow-neon/40"
+                                        >
+                                            {copied ? <Check size={24} /> : <Copy size={24} />}
+                                        </button>
+                                    </div>
+
+                                    <div className="bg-glass-fill rounded-[32px] p-8 border-2 border-primary/20 flex flex-col items-center gap-6 group">
+                                        <div className="relative p-4 bg-white rounded-3xl overflow-hidden shadow-2xl group-hover:scale-105 transition-transform">
+                                            <img
+                                                src={`${API_URL}/api/qr/${result.slug}?color=${encodeURIComponent("#00f2ff")}`}
+                                                alt="Studio QR"
+                                                className="w-32 h-32"
+                                            />
+                                        </div>
+                                        <div className="text-center">
+                                            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/40 block mb-2">DYNAMIC QR STUDIO</span>
+                                            <a
+                                                href={`${API_URL}/api/qr/${result.slug}?color=${encodeURIComponent("#00f2ff")}`}
+                                                download={`qr-${result.slug}.png`}
+                                                className="text-xs font-black text-primary hover:text-neon transition-colors underline underline-offset-4"
+                                            >
+                                                DOWNLOAD QR
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row gap-4 pt-6">
+                                    <Link href={`/${result.slug}`} className="flex-1 bg-white text-black font-black py-6 rounded-[24px] transition-all shadow-xl text-sm uppercase tracking-widest flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95">
+                                        View Live Drop <ExternalLink size={18} />
+                                    </Link>
+                                    <button onClick={() => setResult(null)} className="flex-1 bg-glass-fill border border-glass-stroke text-contrast font-black py-6 rounded-[24px] hover:bg-glass-stroke transition-all text-sm uppercase tracking-widest">
+                                        Return to Studio
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 }
