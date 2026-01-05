@@ -2,10 +2,11 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 const AMHARIC_CHARS = "ሀለሐመሠረሰሸቀበተቸኀነኘአከኸወዐዘዠየደጀገጠጨጰጸፀፈፐ";
 
-export function ModernBackground({ themeColor = "#10b981", bgColor }: { themeColor?: string; bgColor?: string }) {
+export function ModernBackground({ themeColor = "#10b981", bgColor, bgImage }: { themeColor?: string; bgColor?: string; bgImage?: string }) {
     const [elements, setElements] = useState<{ id: number; char: string; x: number; y: number; size: number; duration: number }[]>([]);
 
     useEffect(() => {
@@ -26,19 +27,36 @@ export function ModernBackground({ themeColor = "#10b981", bgColor }: { themeCol
             style={bgColor ? { backgroundColor: bgColor } : {}}
         >
             {/* Cinematic GIF Background */}
-            <div className="absolute inset-0 z-0 overflow-hidden bg-background" style={bgColor ? { backgroundColor: bgColor } : {}}>
+            <div
+                className="absolute inset-0 z-0 overflow-hidden bg-background"
+                style={bgColor ? { backgroundColor: bgColor } : {}}
+            >
+                {/* Background Image Layer */}
+                {bgImage && (
+                    <div
+                        className="absolute inset-0 z-1 bg-cover bg-center bg-no-repeat transition-opacity duration-1000"
+                        style={{
+                            backgroundImage: `url(${bgImage})`,
+                            opacity: 0.35
+                        }}
+                    />
+                )}
+
                 {/* Cinematic Depth Orbs */}
                 <div
                     className="absolute top-1/4 left-1/4 w-[60%] h-[60%] rounded-full blur-[120px] animate-pulse opacity-10 dark:opacity-20"
-                    style={{ backgroundColor: themeColor }}
+                    style={{ backgroundColor: themeColor, zIndex: 2 }}
                 />
                 <div
                     className="absolute bottom-1/4 right-1/4 w-[60%] h-[60%] rounded-full blur-[120px] animate-pulse-slow opacity-10 dark:opacity-20"
-                    style={{ backgroundColor: themeColor }}
+                    style={{ backgroundColor: themeColor, zIndex: 2 }}
                 />
 
                 {/* Professional Overlays */}
-                <div className="absolute inset-0 bg-gradient-to-b from-background via-background/60 dark:via-background/40 to-background z-10" />
+                <div className={cn(
+                    "absolute inset-0 z-10 bg-gradient-to-b",
+                    bgImage ? "from-transparent via-background/40 to-background" : "from-background via-background/60 dark:via-background/40 to-background"
+                )} />
                 {/* Central Vignette for Content Readability */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(var(--background),0.6)_100%)] z-15" />
                 <div className="absolute inset-0 z-20 backdrop-blur-[4px] dark:backdrop-blur-[6px] opacity-10" style={{ backgroundColor: themeColor }} />

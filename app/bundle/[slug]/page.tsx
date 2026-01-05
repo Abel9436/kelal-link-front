@@ -58,8 +58,8 @@ export default function BundleViewPage() {
     );
 
     return (
-        <div className="relative min-h-screen bg-background selection:bg-neon/30 text-foreground overflow-x-hidden pb-20" style={{ backgroundColor: bundle.bg_color }}>
-            <ModernBackground themeColor={bundle.theme_color} bgColor={bundle.bg_color} />
+        <div className="relative min-h-screen selection:bg-neon/30 text-foreground overflow-x-hidden pb-20">
+            <ModernBackground themeColor={bundle.theme_color} bgColor={bundle.bg_color} bgImage={bundle.bg_image} />
 
             <div className="max-w-2xl mx-auto px-6 pt-24 md:pt-32 space-y-12 relative z-10">
                 {/* Profile Header */}
@@ -72,10 +72,14 @@ export default function BundleViewPage() {
                         <motion.div
                             animate={{ rotate: [0, 10, -10, 0] }}
                             transition={{ duration: 6, repeat: Infinity }}
-                            className="w-24 h-24 md:w-32 md:h-32 rounded-[2.5rem] md:rounded-[3.5rem] bg-glass-deep border-4 shadow-2xl flex items-center justify-center text-background"
+                            className="w-24 h-24 md:w-32 md:h-32 rounded-[2.5rem] md:rounded-[3.5rem] bg-glass-deep border-4 shadow-2xl flex items-center justify-center text-background overflow-hidden"
                             style={{ borderColor: bundle.theme_color, backgroundColor: bundle.theme_color }}
                         >
-                            <Layers size={48} className="md:size-64" />
+                            {bundle.profile_image ? (
+                                <img src={bundle.profile_image} alt={bundle.title} className="w-full h-full object-cover" />
+                            ) : (
+                                <Layers size={48} className="md:size-64" />
+                            )}
                         </motion.div>
                         <div
                             className="absolute -bottom-2 -right-2 text-black text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-tighter shadow-lg border-2 border-background"

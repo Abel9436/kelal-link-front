@@ -41,6 +41,8 @@ export default function CreateBundlePage() {
     const [cardColor, setCardColor] = useState("rgba(255,255,255,0.05)");
     const [metaTitle, setMetaTitle] = useState("");
     const [metaDescription, setMetaDescription] = useState("");
+    const [bgImage, setBgImage] = useState("");
+    const [profileImage, setProfileImage] = useState("");
     const { token } = useAuth();
 
     useEffect(() => {
@@ -74,6 +76,8 @@ export default function CreateBundlePage() {
                     password: password || undefined,
                     meta_title: metaTitle || undefined,
                     meta_description: metaDescription || undefined,
+                    bg_image: bgImage || undefined,
+                    profile_image: profileImage || undefined,
                 }),
             });
             if (!res.ok) {
@@ -228,6 +232,46 @@ export default function CreateBundlePage() {
                                             className="flex-1 bg-transparent py-5 text-sm font-black outline-none text-contrast uppercase tracking-widest"
                                         />
                                         <div className="w-8 h-8 rounded-xl border-2 border-white/10 shadow-lg" style={{ backgroundColor: themeColor }} />
+                                    </div>
+
+                                    {/* Image & Media Expansion */}
+                                    <div className="pt-8 border-t border-glass-stroke space-y-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-xl bg-neon/10 flex items-center justify-center text-neon">
+                                                <Sparkles size={14} />
+                                            </div>
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-contrast">{lang === 'en' ? 'Media & Identity' : 'ሚዲያ እና ማንነት'}</span>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-3">
+                                                <div className="flex justify-between items-center px-2">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-contrast">{lang === 'en' ? 'Background Image URL' : 'የዳራ ምስል URL'}</span>
+                                                    <span className="text-[8px] font-bold text-primary/40 uppercase tracking-[0.2em]">GIF or Image</span>
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    value={bgImage}
+                                                    onChange={(e) => setBgImage(e.target.value)}
+                                                    placeholder="https://example.com/background.gif"
+                                                    className="w-full bg-glass-fill border-2 border-glass-stroke rounded-2xl px-6 py-4 text-xs font-bold text-contrast focus:border-primary/50 outline-none transition-all placeholder:text-primary/20"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-3">
+                                                <div className="flex justify-between items-center px-2">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-contrast">{lang === 'en' ? 'Custom Profile URL' : 'የፕሮፋይል ምስል URL'}</span>
+                                                    <span className="text-[8px] font-bold text-primary/40 uppercase tracking-[0.2em]">Identity</span>
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    value={profileImage}
+                                                    onChange={(e) => setProfileImage(e.target.value)}
+                                                    placeholder="https://example.com/me.png"
+                                                    className="w-full bg-glass-fill border-2 border-glass-stroke rounded-2xl px-6 py-4 text-xs font-bold text-contrast focus:border-primary/50 outline-none transition-all placeholder:text-primary/20"
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -407,23 +451,37 @@ export default function CreateBundlePage() {
                         >
                             {/* Inner Screen */}
                             <div className="w-full h-full relative flex flex-col items-center pt-16 pb-12 overflow-y-auto no-scrollbar" style={{ backgroundColor: bgColor }}>
+                                {/* Background Image Layer in Preview */}
+                                {bgImage && (
+                                    <div
+                                        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+                                        style={{
+                                            backgroundImage: `url(${bgImage})`,
+                                            opacity: 0.35
+                                        }}
+                                    />
+                                )}
                                 <div className="absolute top-4 left-1/2 -translate-x-1/2 w-20 h-5 bg-[#222] rounded-full z-20" /> {/* Speaker/Notch */}
 
                                 {/* Dynamic Content */}
-                                <div className="w-full px-8 space-y-8 flex flex-col items-center">
+                                <div className="relative w-full px-8 space-y-8 flex flex-col items-center z-10">
                                     <div
-                                        className="w-24 h-24 rounded-[32px] flex items-center justify-center text-background shadow-xl border border-white/10 transition-colors"
+                                        className="w-24 h-24 rounded-[32px] flex items-center justify-center text-background shadow-xl border border-white/10 transition-colors overflow-hidden z-10"
                                         style={{ backgroundColor: themeColor }}
                                     >
-                                        <Layout size={40} />
+                                        {profileImage ? (
+                                            <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <Layout size={40} />
+                                        )}
                                     </div>
 
-                                    <div className="text-center space-y-2">
+                                    <div className="text-center space-y-2 z-10">
                                         <h3 className="text-2xl font-black tracking-tighter italic" style={{ color: titleColor }}>{title || (lang === 'en' ? "Your Brand Name" : "የልዩ ስምዎ")}</h3>
                                         <p className="text-xs font-bold leading-relaxed italic" style={{ color: textColor }}>{description || (lang === 'en' ? "Professional Identity Studio" : "ፕሮፌሽናል ዲጂታል መለያ")}</p>
                                     </div>
 
-                                    <div className="w-full space-y-4">
+                                    <div className="w-full space-y-4 z-10">
                                         {items.map((item, i) => {
                                             const platform = getPlatformInfo(item.url);
                                             return (
