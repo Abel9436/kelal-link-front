@@ -2,11 +2,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
     ExternalLink, Share2, Heart, Shield,
-    Layers, Zap, Sparkles, Globe, ArrowRight
+    Layers, Zap, Sparkles, Globe, ArrowRight, Code
 } from "lucide-react";
 import { ModernBackground } from "@/components/modern-background";
 import { getPlatformInfo } from "@/lib/platforms";
@@ -17,6 +17,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export default function BundleViewPage() {
     const { slug } = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const isEmbed = searchParams.get("embed") === "true";
+
     const [bundle, setBundle] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -39,6 +42,26 @@ export default function BundleViewPage() {
         fetchBundle();
     }, [slug, router]);
 
+    // Brand Favicon & Title Sync
+    useEffect(() => {
+        if (bundle) {
+            if (bundle.profile_image) {
+                const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+                if (link) {
+                    link.href = bundle.profile_image;
+                } else {
+                    const newLink = document.createElement('link');
+                    newLink.rel = 'icon';
+                    newLink.href = bundle.profile_image;
+                    document.getElementsByTagName('head')[0].appendChild(newLink);
+                }
+            }
+            if (bundle.title) {
+                document.title = `${bundle.title} | Studio V1`;
+            }
+        }
+    }, [bundle]);
+
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-background">
             <motion.div
@@ -58,10 +81,10 @@ export default function BundleViewPage() {
     );
 
     return (
-        <div className="relative min-h-screen selection:bg-neon/30 text-foreground overflow-x-hidden pb-20">
+        <div className={cn("relative min-h-screen selection:bg-neon/30 text-foreground overflow-x-hidden", isEmbed ? "pb-4" : "pb-20")}>
             <ModernBackground themeColor={bundle.theme_color} bgColor={bundle.bg_color} bgImage={bundle.bg_image} />
 
-            <div className="max-w-2xl mx-auto px-6 pt-24 md:pt-32 space-y-12 relative z-10">
+            <div className={cn("max-w-2xl mx-auto px-6 relative z-10", isEmbed ? "pt-8" : "pt-24 md:pt-32 space-y-12")}>
                 {/* Profile Header */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -122,10 +145,35 @@ export default function BundleViewPage() {
                                     style={{ backgroundColor: bundle.theme_color + '30' }}
                                 />
                                 <motion.div
-                                    variants={{ hover: { borderColor: bundle.theme_color, backgroundColor: bundle.theme_color + '08' } }}
-                                    className="relative glass-card p-6 md:p-8 rounded-[2.5rem] border transition-colors flex items-center justify-between gap-4 overflow-hidden shadow-xl active:scale-95"
-                                    style={{ borderColor: bundle.theme_color + '20', backgroundColor: bundle.card_color }}
+                                    variants={{ hover: { borderColor: bundle.theme_color, backgroundColor: bundle.theme_color + '12' } }}
+                                    className={cn(
+                                        "relative glass-card p-6 md:p-8 rounded-[2.5rem] border transition-all flex items-center justify-between gap-4 overflow-hidden shadow-xl active:scale-95",
+                                        item.is_spotlight && "border-2 shadow-[0_0_30px_rgba(var(--neon),0.2)]"
+                                    )}
+                                    style={{
+                                        borderColor: item.is_spotlight ? bundle.theme_color : bundle.theme_color + '20',
+                                        backgroundColor: item.is_spotlight ? bundle.theme_color + '05' : bundle.card_color
+                                    }}
                                 >
+                                    {item.is_spotlight && (
+                                        <motion.div
+                                            animate={{
+                                                x: ["-100%", "200%"],
+                                            }}
+                                            transition={{
+                                                duration: 3,
+                                                repeat: Infinity,
+                                                ease: "linear",
+                                            }}
+                                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 pointer-events-none"
+                                        />
+                                    )}
+
+                                    {item.is_spotlight && (
+                                        <div className="absolute top-4 right-4 group-hover:rotate-12 transition-transform">
+                                            <Sparkles size={14} className="text-neon animate-pulse" style={{ color: bundle.theme_color }} />
+                                        </div>
+                                    )}
                                     <div className="flex items-center gap-6">
                                         <motion.div
                                             variants={{ hover: { backgroundColor: bundle.theme_color, color: '#000', rotate: 12 } }}
@@ -155,34 +203,36 @@ export default function BundleViewPage() {
                     })}
                 </div>
 
-                {/* Footer Branding */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    className="pt-12 border-t border-glass-stroke flex flex-col items-center gap-6 text-center"
-                >
-                    <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-black uppercase tracking-[0.5em] opacity-30 flex items-center gap-2" style={{ color: bundle.text_color }}>
-                            CRAFTED WITH <Heart size={12} className="text-red-500/40" /> BY ABEL BEKELE
-                        </span>
-                    </div>
-                    <div className="flex gap-4">
-                        <motion.a
-                            href="https://jami.bio/Abelb"
-                            target="_blank"
-                            whileHover={{ backgroundColor: bundle.theme_color, color: '#000', scale: 1.05 }}
-                            className="px-6 py-3 rounded-2xl glass-card border-glass-stroke text-[10px] font-black uppercase tracking-widest text-primary transition-all"
-                        >
-                            Support Creator
-                        </motion.a>
-                        <button onClick={() => {
-                            navigator.clipboard.writeText(window.location.href);
-                            alert("Link copied!");
-                        }} className="p-3 rounded-2xl glass-card border-glass-stroke text-primary hover:bg-primary hover:text-background transition-all">
-                            <Share2 size={16} />
-                        </button>
-                    </div>
-                </motion.div>
+                {/* Footer Branding - Hidden in Embed */}
+                {!isEmbed && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        className="pt-12 border-t border-glass-stroke flex flex-col items-center gap-6 text-center"
+                    >
+                        <div className="flex items-center gap-3">
+                            <span className="text-[10px] font-black uppercase tracking-[0.5em] opacity-30 flex items-center gap-2" style={{ color: bundle.text_color }}>
+                                CRAFTED WITH <Heart size={12} className="text-red-500/40" /> BY ABEL BEKELE
+                            </span>
+                        </div>
+                        <div className="flex gap-4">
+                            <motion.a
+                                href="https://jami.bio/Abelb"
+                                target="_blank"
+                                whileHover={{ backgroundColor: bundle.theme_color, color: '#000', scale: 1.05 }}
+                                className="px-6 py-3 rounded-2xl glass-card border-glass-stroke text-[10px] font-black uppercase tracking-widest text-primary transition-all"
+                            >
+                                Support Creator
+                            </motion.a>
+                            <button onClick={() => {
+                                navigator.clipboard.writeText(window.location.href);
+                                alert("Link copied!");
+                            }} className="p-3 rounded-2xl glass-card border-glass-stroke text-primary hover:bg-primary hover:text-background transition-all">
+                                <Share2 size={16} />
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
             </div>
         </div>
     );

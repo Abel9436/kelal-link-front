@@ -9,8 +9,10 @@ import {
     Trash2, ExternalLink, Copy, Check, Search,
     Filter, ArrowLeft, Plus, Globe, Shield, Clock,
     Activity, ChevronRight, Zap, Share2, TrendingUp, MousePointer,
-    Calendar, SortAsc, History, Info, Edit3
+    Calendar, SortAsc, History, Info, Edit3, Code, X,
+    Sparkles, Fingerprint, Rocket
 } from 'lucide-react';
+import { UserMenu } from "@/components/user-menu";
 import { ModernBackground } from '@/components/modern-background';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -31,7 +33,7 @@ const Sparkline = ({ color = "#10b981" }) => (
 );
 
 export default function DashboardPage() {
-    const { user, token, isLoading } = useAuth();
+    const { user, token, logout, updateUser, isLoading } = useAuth();
     const router = useRouter();
     const [drops, setDrops] = useState<{ urls: any[], bundles: any[] }>({ urls: [], bundles: [] });
     const [fetching, setFetching] = useState(true);
@@ -39,17 +41,25 @@ export default function DashboardPage() {
     const [filter, setFilter] = useState<'all' | 'link' | 'bundle'>('all');
     const [sortBy, setSortBy] = useState<'date' | 'clicks' | 'name'>('date');
     const [copied, setCopied] = useState<string | null>(null);
+    const [embedDrop, setEmbedDrop] = useState<any>(null);
+    const [showProfileModal, setShowProfileModal] = useState(false);
+    const [newUsername, setNewUsername] = useState("");
+    const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+    const [profileError, setProfileError] = useState("");
 
     useEffect(() => {
         if (!isLoading && !user) {
             router.push('/');
             return;
         }
+        if (user) {
+            setNewUsername(user.username || "");
+        }
 
         if (user && token) {
             fetchDrops();
         }
-    }, [user, token, isLoading]);
+    }, [user, token, isLoading, router]);
 
     const fetchDrops = async () => {
         try {
@@ -91,6 +101,37 @@ export default function DashboardPage() {
         navigator.clipboard.writeText(url);
         setCopied(slug);
         setTimeout(() => setCopied(null), 2000);
+    };
+
+    const handleUpdateProfile = async () => {
+        if (!user || !token) return;
+        setIsUpdatingProfile(true);
+        setProfileError("");
+
+        try {
+            const res = await fetch(`${API_URL}/api/user/profile`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ username: newUsername })
+            });
+
+            if (res.ok) {
+                const updatedUser = await res.json();
+                updateUser(updatedUser);
+                setShowProfileModal(false);
+            } else {
+                const errorData = await res.json();
+                setProfileError(errorData.detail || "Failed to update profile.");
+            }
+        } catch (err) {
+            setProfileError("An unexpected error occurred.");
+            console.error("Profile update failed:", err);
+        } finally {
+            setIsUpdatingProfile(false);
+        }
     };
 
     if (isLoading || fetching) {
@@ -139,13 +180,28 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                <Link
-                    href="/create"
-                    className="bg-primary hover:bg-neon hover:text-black px-6 py-2.5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-primary/20 flex items-center gap-2"
-                >
-                    <Plus size={14} />
-                    New Drop
-                </Link>
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => setShowProfileModal(true)}
+                        className="bg-glass-fill p-3 rounded-2xl border border-glass-stroke text-primary hover:bg-glass-stroke transition-all flex items-center gap-3 group"
+                    >
+                        <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center overflow-hidden">
+                            {user?.profile_pic ? <img src={user.profile_pic} alt="" className="w-full h-full object-cover" /> : <Sparkles size={16} />}
+                        </div>
+                        <div className="text-left hidden sm:block">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-contrast">{user?.name || 'Studio Member'}</p>
+                            <p className="text-[8px] font-bold text-primary/40 uppercase tracking-tighter italic">@{user?.username || 'set_identity'}</p>
+                        </div>
+                    </button>
+                    <UserMenu />
+                    <Link
+                        href="/create"
+                        className="bg-primary hover:bg-neon hover:text-black px-6 py-2.5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-primary/20 flex items-center gap-2"
+                    >
+                        <Plus size={14} />
+                        New Drop
+                    </Link>
+                </div>
             </nav>
 
             <main className="max-w-7xl mx-auto px-6 pt-32 pb-24 space-y-12">
@@ -216,18 +272,21 @@ export default function DashboardPage() {
                             <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60">Studio Capacity</span>
                         </div>
                         <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <span className="text-[10px] font-black text-contrast uppercase tracking-widest italic text-xs">V1 Protocol</span>
-                                <span className="text-[10px] font-black text-primary uppercase">Elite</span>
+                            <div className="flex justify-between items-end pb-5 border-b border-glass-stroke">
+                                <span className="text-[10px] font-black text-primary/40 uppercase tracking-widest italic">Member Since</span>
+                                <span className="text-sm font-black text-contrast uppercase tracking-tighter">Jan 2026</span>
                             </div>
-                            <div className="h-2 w-full bg-glass-fill border border-glass-stroke rounded-full overflow-hidden">
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${Math.min((totalDrops / 50) * 100, 100)}%` }}
-                                    className="h-full bg-primary"
-                                />
+                            <div className="flex justify-between items-end pb-5 border-b border-glass-stroke">
+                                <span className="text-[10px] font-black text-primary/40 uppercase tracking-widest italic">Drop Limit</span>
+                                <span className="text-sm font-black text-contrast uppercase tracking-tighter">Unlimited</span>
                             </div>
-                            <p className="text-[8px] font-bold text-primary/30 uppercase tracking-[0.2em]">{totalDrops}/50 Mastery Drops Used</p>
+                            <div className="flex justify-between items-end">
+                                <span className="text-[10px] font-black text-primary/40 uppercase tracking-widest italic">Intelligence Status</span>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-neon animate-pulse" />
+                                    <span className="text-xs font-black text-neon uppercase tracking-widest">Active</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -376,6 +435,15 @@ export default function DashboardPage() {
                                                 >
                                                     <Share2 size={18} />
                                                 </button>
+                                                {drop.type === 'bundle' && (
+                                                    <button
+                                                        onClick={() => setEmbedDrop(drop)}
+                                                        className="h-12 w-12 flex items-center justify-center rounded-2xl hover:bg-glass-stroke transition-all text-primary/40 hover:text-primary"
+                                                        title="Get Embed Code"
+                                                    >
+                                                        <Code size={18} />
+                                                    </button>
+                                                )}
                                                 <button
                                                     onClick={() => window.open(drop.type === 'bundle' ? `/bundle/${drop.slug}` : `/${drop.slug}`, '_blank')}
                                                     className="h-12 w-12 flex items-center justify-center rounded-2xl hover:bg-glass-stroke transition-all text-primary/40 hover:text-primary"
@@ -496,6 +564,157 @@ export default function DashboardPage() {
                     </div>
                 </div>
             </main>
+
+            {/* Embed Modal */}
+            <AnimatePresence>
+                {embedDrop && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-12">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-background/80 backdrop-blur-xl" onClick={() => setEmbedDrop(null)} />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="relative w-full max-w-xl bg-glass-card p-10 md:p-12 rounded-[48px] border border-primary/20 shadow-2xl overflow-hidden"
+                        >
+                            <button onClick={() => setEmbedDrop(null)} className="absolute top-6 right-6 p-3 rounded-2xl bg-glass-fill hover:bg-glass-stroke transition-colors text-primary/40">
+                                <X size={20} />
+                            </button>
+
+                            <div className="space-y-8">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-4 rounded-3xl bg-primary/10 text-primary">
+                                        <Code size={24} />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-black text-contrast uppercase tracking-tighter italic">Studio Embed Protocol</h2>
+                                        <p className="text-[10px] font-black text-neon tracking-[0.4em] uppercase opacity-70">Integrate Anywhere</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    {/* Embed Link */}
+                                    <div className="space-y-3">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-primary/40 px-2 italic">Raw Embed Link</span>
+                                        <div className="bg-glass-fill p-5 rounded-[24px] border border-glass-stroke flex items-center justify-between gap-4 group">
+                                            <span className="text-xs font-bold text-contrast truncate flex-1 select-all italic">
+                                                {`${window.location.origin}/bundle/${embedDrop.slug}?embed=true`}
+                                            </span>
+                                            <button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(`${window.location.origin}/bundle/${embedDrop.slug}?embed=true`);
+                                                    alert("Embed link copied!");
+                                                }}
+                                                className="p-3 rounded-xl bg-primary text-background hover:scale-105 transition-transform"
+                                            >
+                                                <Copy size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Iframe Snippet */}
+                                    <div className="space-y-3">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-primary/40 px-2 italic">Masterpiece iFrame Snippet</span>
+                                        <div className="bg-black/40 p-5 rounded-[24px] border border-white/5 relative group">
+                                            <code className="text-[10px] font-mono text-primary/60 break-all leading-relaxed block overflow-y-auto max-h-24 no-scrollbar">
+                                                {`<iframe src="${window.location.origin}/bundle/${embedDrop.slug}?embed=true" width="100%" height="600px" frameborder="0"></iframe>`}
+                                            </code>
+                                            <button
+                                                onClick={() => {
+                                                    const code = `<iframe src="${window.location.origin}/bundle/${embedDrop.slug}?embed=true" width="100%" height="600px" frameborder="0"></iframe>`;
+                                                    navigator.clipboard.writeText(code);
+                                                    alert("Snippet copied!");
+                                                }}
+                                                className="absolute top-4 right-4 p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-background transition-all"
+                                            >
+                                                <Copy size={12} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-6 rounded-[32px] bg-primary/5 border border-primary/10">
+                                    <p className="text-[10px] font-bold text-primary/40 leading-relaxed italic uppercase tracking-widest">
+                                        Clinical Note: This link provides a "Stealth Mode" view perfectly optimized for CMS widgets and external application containers.
+                                    </p>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Profile Settings Modal */}
+            <AnimatePresence>
+                {showProfileModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-12">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-background/80 backdrop-blur-xl" onClick={() => setShowProfileModal(false)} />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="relative w-full max-w-lg bg-glass-card p-10 md:p-12 rounded-[48px] border border-primary/20 shadow-2xl overflow-hidden"
+                        >
+                            <button onClick={() => setShowProfileModal(false)} className="absolute top-6 right-6 p-3 rounded-2xl bg-glass-fill hover:bg-glass-stroke transition-colors text-primary/40">
+                                <X size={20} />
+                            </button>
+
+                            <div className="space-y-8">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-4 rounded-3xl bg-primary/10 text-primary">
+                                        <Fingerprint size={24} />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-black text-contrast uppercase tracking-tighter italic">Studio Identity Protocol</h2>
+                                        <p className="text-[10px] font-black text-neon tracking-[0.4em] uppercase opacity-70">Claim your URL</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center px-2">
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-primary/40 italic">Claimed Username</span>
+                                            {user?.username && (
+                                                <Link
+                                                    href={`/studio/${user.username}`}
+                                                    target="_blank"
+                                                    className="text-[8px] font-black text-neon hover:underline flex items-center gap-1"
+                                                >
+                                                    VIEW HUB <ExternalLink size={10} />
+                                                </Link>
+                                            )}
+                                        </div>
+                                        <div className="relative group">
+                                            <div className="absolute left-6 top-1/2 -translate-y-1/2 text-primary/40 font-black text-[10px] group-focus-within:text-primary transition-colors uppercase whitespace-nowrap">
+                                                {typeof window !== 'undefined' ? window.location.host : ''}/studio/
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={newUsername}
+                                                onChange={(e) => setNewUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
+                                                placeholder="username"
+                                                className="w-full bg-glass-fill border-2 border-glass-stroke rounded-[24px] py-5 pl-[160px] md:pl-[180px] pr-8 text-sm font-black text-contrast outline-none focus:border-primary transition-all"
+                                            />
+                                        </div>
+                                        {profileError && <p className="text-[10px] font-black text-red-500/80 uppercase tracking-widest px-4 italic">{profileError}</p>}
+                                        <p className="text-[10px] font-black text-primary/30 uppercase italic px-4 leading-relaxed">
+                                            This username defines your public Portfolio Hub URL where all your drops are showcased.
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        onClick={handleUpdateProfile}
+                                        disabled={isUpdatingProfile || newUsername === user?.username}
+                                        className="w-full bg-primary text-background font-black py-6 rounded-[24px] hover:bg-neon hover:scale-[1.02] active:scale-95 disabled:opacity-30 disabled:scale-100 transition-all text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-3 shadow-xl shadow-primary/20"
+                                    >
+                                        {isUpdatingProfile ? <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" /> : <Rocket size={16} />}
+                                        Synchronize ID
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

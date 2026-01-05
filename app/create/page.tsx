@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ChevronLeft, Edit3, Eye, Rocket, Layout, Clock, ShieldAlert, Heart,
-    Smartphone, Tablet, Monitor, Fingerprint, Lock, ArrowRight, Check, Sparkles, Globe, Palette, Share2, Copy, ExternalLink
+    Smartphone, Tablet, Monitor, Fingerprint, Lock, ArrowRight, Check, Sparkles, Globe, Palette, Share2, Copy, ExternalLink,
+    Code
 } from "lucide-react";
 import { UserMenu } from "@/components/user-menu";
 import { useAuth } from "@/components/auth-context";
@@ -22,7 +23,7 @@ export default function CreateBundlePage() {
     const router = useRouter();
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [items, setItems] = useState([{ id: "1", label: "", url: "" }]);
+    const [items, setItems] = useState<{ id: string; label: string; url: string; isSpotlight?: boolean }[]>([{ id: "1", label: "", url: "", isSpotlight: false }]);
     const [customSlug, setCustomSlug] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [result, setResult] = useState<any>(null);
@@ -63,7 +64,7 @@ export default function CreateBundlePage() {
                 body: JSON.stringify({
                     title,
                     description,
-                    items: items.filter(i => i.url && i.label).map(({ label, url }) => ({ label, url })),
+                    items: items.filter(i => i.url && i.label).map(({ label, url, isSpotlight }) => ({ label, url, is_spotlight: isSpotlight })),
                     theme_color: themeColor,
                     bg_color: bgColor,
                     text_color: textColor,
@@ -487,22 +488,38 @@ export default function CreateBundlePage() {
                                             return (
                                                 <div
                                                     key={item.id}
-                                                    className="w-full p-4 rounded-3xl border flex items-center justify-between group/preview-item hover:border-white/20 transition-all shadow-lg"
+                                                    className={cn(
+                                                        "w-full p-4 rounded-3xl border flex items-center justify-between group/preview-item hover:border-white/20 transition-all shadow-lg relative overflow-hidden",
+                                                        item.isSpotlight && "border-2"
+                                                    )}
                                                     style={{
-                                                        backgroundColor: cardColor,
-                                                        borderColor: themeColor + '20'
+                                                        backgroundColor: item.isSpotlight ? themeColor + '10' : cardColor,
+                                                        borderColor: item.isSpotlight ? themeColor : themeColor + '20'
                                                     }}
                                                 >
-                                                    <div className="flex items-center gap-4">
+                                                    {item.isSpotlight && (
+                                                        <motion.div
+                                                            animate={{ x: ["-100%", "200%"] }}
+                                                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                                                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 pointer-events-none"
+                                                        />
+                                                    )}
+                                                    <div className="flex items-center gap-4 relative z-10">
                                                         <div
                                                             className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-background transition-colors", platform.color)}
                                                             style={{ backgroundColor: themeColor }}
                                                         >
                                                             <platform.icon size={18} />
                                                         </div>
-                                                        <span className="text-[11px] font-black uppercase tracking-widest" style={{ color: textColor }}>{item.label || "Link Label"}</span>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[11px] font-black uppercase tracking-widest" style={{ color: textColor }}>{item.label || "Link Label"}</span>
+                                                            {item.isSpotlight && <span className="text-[8px] font-black text-neon uppercase italic tracking-widest" style={{ color: themeColor }}>Spotlight</span>}
+                                                        </div>
                                                     </div>
-                                                    <ArrowRight size={14} className="text-primary/20 group-hover/preview-item:translate-x-1 transition-transform" style={{ color: themeColor }} />
+                                                    <div className="flex items-center gap-2 relative z-10">
+                                                        {item.isSpotlight && <Sparkles size={12} className="text-neon animate-pulse" style={{ color: themeColor }} />}
+                                                        <ArrowRight size={14} className="text-primary/20 group-hover/preview-item:translate-x-1 transition-transform" style={{ color: themeColor }} />
+                                                    </div>
                                                 </div>
                                             );
                                         })}
@@ -577,13 +594,40 @@ export default function CreateBundlePage() {
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col sm:flex-row gap-4 pt-6">
-                                    <Link href={`/bundle/${result.slug}`} className="flex-1 bg-white text-black font-black py-6 rounded-[24px] transition-all shadow-xl text-sm uppercase tracking-widest flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95">
-                                        View Live Studio <ExternalLink size={18} />
-                                    </Link>
-                                    <button onClick={() => setResult(null)} className="flex-1 bg-glass-fill border border-glass-stroke text-contrast font-black py-6 rounded-[24px] hover:bg-glass-stroke transition-all text-sm uppercase tracking-widest">
-                                        Return to Editor
-                                    </button>
+                                <div className="space-y-4 pt-6">
+                                    <div className="bg-glass-fill rounded-[32px] p-8 border-2 border-primary/20 flex flex-col items-stretch gap-4 text-left group">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <Code size={14} className="text-primary/40" />
+                                                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/40">MASTERPIECE EMBED CODE</span>
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    const code = `<iframe src="${window.location.protocol}//${window.location.host}/bundle/${result.slug}?embed=true" width="100%" height="600px" frameborder="0"></iframe>`;
+                                                    navigator.clipboard.writeText(code);
+                                                    alert("Embed code copied to clipboard!");
+                                                }}
+                                                className="text-[10px] font-black text-neon hover:underline"
+                                            >
+                                                COPY CODE
+                                            </button>
+                                        </div>
+                                        <div className="bg-black/40 p-4 rounded-xl border border-white/5 overflow-hidden">
+                                            <code className="text-[10px] font-mono text-primary/60 break-all leading-tight block">
+                                                {`<iframe src="${window.location.protocol}//${window.location.host}/bundle/${result.slug}?embed=true" width="100%" height="600px" frameborder="0"></iframe>`}
+                                            </code>
+                                        </div>
+                                        <p className="text-[9px] font-bold text-primary/30 uppercase italic">Paste this snippet into any HTML site or CMS (WordPress, Webflow, etc.)</p>
+                                    </div>
+
+                                    <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                                        <Link href={`/bundle/${result.slug}`} className="flex-1 bg-white text-black font-black py-6 rounded-[24px] transition-all shadow-xl text-sm uppercase tracking-widest flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95">
+                                            View Live Studio <ExternalLink size={18} />
+                                        </Link>
+                                        <button onClick={() => setResult(null)} className="flex-1 bg-glass-fill border border-glass-stroke text-contrast font-black py-6 rounded-[24px] hover:bg-glass-stroke transition-all text-sm uppercase tracking-widest">
+                                            Return to Editor
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </motion.div>

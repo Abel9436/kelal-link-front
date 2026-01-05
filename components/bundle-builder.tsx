@@ -27,17 +27,19 @@ interface LinkItem {
     id: string;
     label: string;
     url: string;
+    isSpotlight?: boolean;
 }
 
 interface SortableItemProps {
     id: string;
     link: LinkItem;
     onUpdate: (id: string, field: 'label' | 'url', value: string) => void;
+    onToggleSpotlight: (id: string) => void;
     onRemove: (id: string) => void;
     lang: 'en' | 'am';
 }
 
-function SortableItem({ id, link, onUpdate, onRemove, lang }: SortableItemProps) {
+function SortableItem({ id, link, onUpdate, onToggleSpotlight, onRemove, lang }: SortableItemProps) {
     const {
         attributes,
         listeners,
@@ -107,12 +109,24 @@ function SortableItem({ id, link, onUpdate, onRemove, lang }: SortableItemProps)
                     </div>
                 </div>
 
-                <button
-                    onClick={() => onRemove(id)}
-                    className="mt-3 p-3 rounded-2xl hover:bg-red-500/10 text-red-500/60 hover:text-red-500 transition-all"
-                >
-                    <Trash2 size={20} />
-                </button>
+                <div className="flex flex-col gap-2 mt-3">
+                    <button
+                        onClick={() => onToggleSpotlight(id)}
+                        className={cn(
+                            "p-3 rounded-2xl transition-all",
+                            link.isSpotlight ? "bg-neon text-background shadow-lg shadow-neon/40" : "hover:bg-glass-fill text-primary/40 hover:text-neon"
+                        )}
+                        title={lang === 'en' ? "Spotlight Link" : "ሊንኩን አጉላ"}
+                    >
+                        <Sparkles size={20} className={link.isSpotlight ? "animate-pulse" : ""} />
+                    </button>
+                    <button
+                        onClick={() => onRemove(id)}
+                        className="p-3 rounded-2xl hover:bg-red-500/10 text-red-500/60 hover:text-red-500 transition-all text-sm font-black"
+                    >
+                        <Trash2 size={20} />
+                    </button>
+                </div>
             </div>
         </motion.div>
     );
@@ -156,6 +170,14 @@ export function BundleBuilder({
 
     const updateItem = (id: string, field: 'label' | 'url', value: string) => {
         setItems(items.map(item => item.id === id ? { ...item, [field]: value } : item));
+    };
+
+    const toggleSpotlight = (id: string) => {
+        // Only one item can be spotlighted at a time for focus
+        setItems(items.map(item => ({
+            ...item,
+            isSpotlight: item.id === id ? !item.isSpotlight : false
+        })));
     };
 
     const removeItem = (id: string) => {
@@ -248,6 +270,7 @@ export function BundleBuilder({
                                 id={item.id}
                                 link={item}
                                 onUpdate={updateItem}
+                                onToggleSpotlight={toggleSpotlight}
                                 onRemove={removeItem}
                                 lang={lang}
                             />

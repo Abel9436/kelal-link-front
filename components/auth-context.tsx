@@ -9,6 +9,7 @@ interface User {
     email: string;
     name: string;
     profile_pic: string;
+    username?: string;
 }
 
 interface AuthContextType {
@@ -16,6 +17,7 @@ interface AuthContextType {
     token: string | null;
     login: (token: string, user: User) => void;
     logout: () => void;
+    updateUser: (user: User) => void;
     isLoading: boolean;
 }
 
@@ -54,9 +56,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         router.push('/');
     };
 
+    const updateUser = (newUser: User) => {
+        setUser(newUser);
+        localStorage.setItem('studio_user', JSON.stringify(newUser));
+    };
+
     return (
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-            <AuthContext.Provider value={{ user, token, login, logout, isLoading }}>
+            <AuthContext.Provider value={{ user, token, login, logout, updateUser, isLoading }}>
                 {children}
             </AuthContext.Provider>
         </GoogleOAuthProvider>

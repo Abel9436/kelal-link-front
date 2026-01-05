@@ -185,16 +185,34 @@ export default function StatsPage() {
                             <BarChart2 size={40} className="block md:hidden" />
                         </div>
                         <h4 className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.5em] text-primary/40">{t.history}</h4>
-                        <div className="flex gap-1 md:gap-2 items-end justify-center h-16 md:h-20">
-                            {[20, 45, 30, 60, 80, 50, 90, 40, 70, 55, 35, 65, 40].map((h, i) => (
-                                <motion.div
-                                    key={i}
-                                    initial={{ height: 0 }}
-                                    animate={{ height: `${h}%` }}
-                                    transition={{ delay: i * 0.05 }}
-                                    className={cn("bg-primary/20 rounded-t-sm md:rounded-t-lg hover:bg-neon transition-colors", i > 8 ? "hidden xs:block" : "block", "w-2 sm:w-4 md:w-6")}
-                                />
-                            ))}
+                        <div className="flex gap-1 md:gap-2 items-end justify-center h-20 md:h-24">
+                            {data.clicks_history && data.clicks_history.length > 0 ? (
+                                data.clicks_history.slice(-15).map((h: any, i: number) => {
+                                    const maxCount = Math.max(...data.clicks_history.map((d: any) => d.count), 1);
+                                    const percentage = (h.count / maxCount) * 100;
+                                    return (
+                                        <div key={i} className="flex flex-col items-center gap-2 group/bar">
+                                            <motion.div
+                                                initial={{ height: 0 }}
+                                                animate={{ height: `${Math.max(percentage, 5)}%` }}
+                                                transition={{ delay: i * 0.05, type: "spring", stiffness: 100 }}
+                                                className={cn("bg-primary/40 rounded-t-lg hover:bg-neon transition-all w-2 sm:w-4 md:w-8 relative", percentage > 0 ? "opacity-100" : "opacity-20")}
+                                            >
+                                                <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap text-[8px] font-black text-neon">
+                                                    {h.count}
+                                                </div>
+                                            </motion.div>
+                                            <span className="text-[6px] font-black text-primary/30 uppercase tracking-tighter hidden md:block">
+                                                {new Date(h.date).getHours()}h
+                                            </span>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                [20, 45, 30, 60, 40, 50, 70].map((h, i) => (
+                                    <div key={i} className="bg-primary/5 rounded-t-lg w-4 md:w-8" style={{ height: `${h}%` }} />
+                                ))
+                            )}
                         </div>
                     </div>
                     <div className="absolute top-6 right-6 text-primary/10">
