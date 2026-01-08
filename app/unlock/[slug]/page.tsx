@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, Unlock, Shield, ArrowRight, Sparkles, Fingerprint } from "lucide-react";
 import { ModernBackground } from "@/components/modern-background";
+import { Navbar } from "@/components/navbar";
+import { cn } from "@/lib/utils";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -18,8 +20,13 @@ export default function UnlockPage() {
     const [lang, setLang] = useState<"en" | "am">("en");
 
     useEffect(() => {
-        const savedLang = localStorage.getItem("app_lang");
-        if (savedLang === "am" || savedLang === "en") setLang(savedLang);
+        const updateLang = () => {
+            const savedLang = localStorage.getItem("app_lang");
+            if (savedLang === "am" || savedLang === "en") setLang(savedLang);
+        };
+        updateLang();
+        window.addEventListener('language-change', updateLang);
+        return () => window.removeEventListener('language-change', updateLang);
     }, []);
 
     const t = {
@@ -71,6 +78,7 @@ export default function UnlockPage() {
     return (
         <div className="relative min-h-screen font-sans overflow-hidden text-foreground flex items-center justify-center p-6">
             <ModernBackground />
+            <Navbar />
 
             <motion.div
                 initial={{ opacity: 0, y: 30 }}

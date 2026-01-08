@@ -25,7 +25,7 @@ export function DonationWidget() {
             drag
             dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
             dragElastic={0.1}
-            className="fixed bottom-8 right-8 z-[100] cursor-grab active:cursor-grabbing"
+            className="fixed bottom-8 right-4 md:right-8 z-[100] cursor-grab active:cursor-grabbing"
         >
             <motion.a
                 href="https://jami.bio/Abelb"
@@ -52,11 +52,11 @@ export function DonationWidget() {
                 </div>
 
                 <div className="flex flex-col">
-                    <span className="text-[9px] font-bold md:font-black text-primary/70 dark:text-primary/60 uppercase tracking-[0.3em] leading-none mb-1">
+                    <span className="text-[7px] md:text-[9px] font-bold md:font-black text-primary/70 dark:text-primary/60 uppercase tracking-[0.3em] leading-none mb-1">
                         Creator Support
                     </span>
-                    <span className="text-sm font-black text-foreground dark:text-contrast uppercase tracking-tighter flex items-center gap-2">
-                        SUPPORT ON JAMI <ExternalLink size={12} className="text-neon" />
+                    <span className="text-xs md:text-sm font-black text-foreground dark:text-contrast uppercase tracking-tighter flex items-center gap-2">
+                        SUPPORT ON JAMI <ExternalLink size={10} className="text-neon hidden md:inline" />
                     </span>
                 </div>
 

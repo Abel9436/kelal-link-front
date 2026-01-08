@@ -3,8 +3,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, ArrowLeft, BarChart2, Globe, MousePointer2, Smartphone, Monitor, Tablet, Sparkles } from "lucide-react";
+import { Activity, ArrowLeft, BarChart2, Globe, MousePointer2, Smartphone, Monitor, Tablet, Sparkles, Plus, LayoutDashboard } from "lucide-react";
 import { ModernBackground } from "@/components/modern-background";
+import { Navbar } from "@/components/navbar";
+import { useAuth } from "@/components/auth-context";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -13,17 +16,27 @@ export default function StatsPage() {
     const params = useParams();
     const router = useRouter();
     const slug = params.slug as string;
+    const { token, user } = useAuth();
     const [data, setData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [lang, setLang] = useState<"en" | "am">("en");
 
     useEffect(() => {
-        const savedLang = localStorage.getItem("app_lang");
-        if (savedLang === "am" || savedLang === "en") setLang(savedLang);
+        const updateLang = () => {
+            const savedLang = localStorage.getItem("app_lang");
+            if (savedLang === "am" || savedLang === "en") setLang(savedLang as any);
+        };
+        updateLang();
+        window.addEventListener('language-change', updateLang);
+        return () => window.removeEventListener('language-change', updateLang);
+    }, []);
 
+    useEffect(() => {
         const fetchStats = async () => {
             try {
-                const res = await fetch(`${API_URL}/api/stats/${slug}`);
+                const res = await fetch(`${API_URL}/api/stats/${slug}`, {
+                    headers: token ? { "Authorization": `Bearer ${token}` } : {}
+                });
                 if (!res.ok) throw new Error("Stats not found");
                 const json = await res.json();
                 setData(json);
@@ -38,7 +51,7 @@ export default function StatsPage() {
         // Poll every 30s for the "Live Pulse" feel
         const interval = setInterval(fetchStats, 30000);
         return () => clearInterval(interval);
-    }, [slug]);
+    }, [slug, token]);
 
     if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-background"><ModernBackground /><motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full" /></div>;
 
@@ -70,7 +83,37 @@ export default function StatsPage() {
     return (
         <div className="relative min-h-screen font-sans text-foreground overflow-x-hidden">
             <ModernBackground />
+            <Navbar>
+                <div className="flex items-center gap-2">
+                    <Link
+                        href="/"
+                        className="p-2.5 rounded-xl bg-glass-fill border border-glass-stroke text-primary/60 hover:text-primary hover:bg-glass-stroke transition-all"
+                        title={lang === 'en' ? 'Back to Home' : 'ወደ መጀመሪያው ተመለስ'}
+                    >
+                        <Globe size={18} strokeWidth={2.5} />
+                    </Link>
 
+                    {user && (
+                        <Link
+                            href="/dashboard"
+                            className="p-2.5 rounded-xl bg-glass-fill border border-glass-stroke text-primary/60 hover:text-primary hover:bg-glass-stroke transition-all"
+                            title={lang === 'en' ? 'Back to Dashboard' : 'ወደ ዳሽቦርድ ተመለስ'}
+                        >
+                            <LayoutDashboard size={18} strokeWidth={2.5} />
+                        </Link>
+                    )}
+                    {user && (
+                        <Link
+                            href="/create"
+                            className="group relative overflow-hidden bg-primary hover:bg-neon text-background px-4 md:px-6 py-2 md:py-2.5 rounded-xl md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] transition-all shadow-[0_10px_30px_rgba(var(--primary),0.2)] flex items-center gap-2.5 hover:scale-105"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                            <Plus size={16} strokeWidth={2.5} />
+                            <span className="hidden md:inline">New Drop</span>
+                        </Link>
+                    )}
+                </div>
+            </Navbar>
             <main className="relative z-10 max-w-6xl mx-auto px-4 md:px-6 pt-24 md:pt-32 pb-20">
                 <motion.button
                     initial={{ opacity: 0, x: -20 }}

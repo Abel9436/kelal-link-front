@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     ChevronLeft, Edit3, Eye, Rocket, Layout, Clock, ShieldAlert, Heart,
     Smartphone, Tablet, Monitor, Fingerprint, Lock, ArrowRight, Check, Sparkles, Globe, Palette, Share2, Copy, ExternalLink,
-    Code
+    Code, Shield
 } from "lucide-react";
 import { UserMenu } from "@/components/user-menu";
 import { useAuth } from "@/components/auth-context";
@@ -14,6 +14,7 @@ import { ModernBackground } from "@/components/modern-background";
 import { BundleBuilder } from "@/components/bundle-builder";
 import { getPlatformInfo } from "@/lib/platforms";
 import React from "react";
+import { Navbar } from "@/components/navbar";
 import { cn } from "@/lib/utils";
 import Link from 'next/link';
 
@@ -44,11 +45,17 @@ export default function CreateBundlePage() {
     const [metaDescription, setMetaDescription] = useState("");
     const [bgImage, setBgImage] = useState("");
     const [profileImage, setProfileImage] = useState("");
+    const [isCloaked, setIsCloaked] = useState(false);
     const { token } = useAuth();
 
     useEffect(() => {
-        const savedLang = localStorage.getItem("app_lang");
-        if (savedLang === "am" || savedLang === "en") setLang(savedLang);
+        const updateLang = () => {
+            const savedLang = localStorage.getItem("app_lang");
+            if (savedLang === "am" || savedLang === "en") setLang(savedLang);
+        };
+        updateLang();
+        window.addEventListener('language-change', updateLang);
+        return () => window.removeEventListener('language-change', updateLang);
     }, []);
 
     const handleCreate = async () => {
@@ -79,6 +86,7 @@ export default function CreateBundlePage() {
                     meta_description: metaDescription || undefined,
                     bg_image: bgImage || undefined,
                     profile_image: profileImage || undefined,
+                    is_cloaked: isCloaked,
                 }),
             });
             if (!res.ok) {
@@ -87,6 +95,7 @@ export default function CreateBundlePage() {
             }
             const data = await res.json();
             setResult(data);
+            setIsCloaked(false);
 
             // Add to history
             const saved = localStorage.getItem("recent_urls");
@@ -105,47 +114,53 @@ export default function CreateBundlePage() {
             <ModernBackground themeColor={themeColor} bgColor={bgColor} />
 
             {/* Top Navigation */}
-            <nav className="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-background/5 backdrop-blur-xl border-b border-glass-stroke">
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={() => router.push("/")}
-                        className="p-3 rounded-2xl bg-glass-fill hover:bg-glass-stroke transition-colors text-primary/80 hover:text-primary"
-                    >
-                        <ChevronLeft size={20} />
-                    </button>
-                    <div className="h-8 w-px bg-glass-stroke hidden md:block" />
-                    <div>
-                        <h2 className="text-sm font-black uppercase tracking-widest text-contrast">{lang === 'en' ? 'Bundle Studio' : 'የጥቅል ስቱዲዮ'}</h2>
-                        <p className="text-[8px] font-black text-neon tracking-[0.5em] uppercase opacity-80">UNCONSCIOUS BRANDING V1</p>
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-4">
-                    <div className="hidden md:flex bg-glass-fill p-1 rounded-2xl border border-glass-stroke">
+            <Navbar>
+                <div className="flex items-center gap-2 md:gap-4 h-full">
+                    {/* Mode Toggle Hub */}
+                    <div className="flex bg-glass-fill/50 p-1 rounded-2xl border border-glass-stroke backdrop-blur-md">
                         <button
                             onClick={() => setActiveTab("edit")}
-                            className={cn("px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2", activeTab === "edit" ? "bg-primary text-background shadow-lg" : "text-primary/70 hover:text-primary")}
+                            className={cn(
+                                "px-4 md:px-6 py-2 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2.5",
+                                activeTab === "edit"
+                                    ? "bg-primary text-background shadow-[0_0_20px_rgba(var(--primary),0.3)]"
+                                    : "text-primary/60 hover:text-primary hover:bg-glass-stroke"
+                            )}
                         >
-                            <Edit3 size={14} /> {lang === 'en' ? 'Edit' : 'አስተካክል'}
+                            <Edit3 size={18} strokeWidth={2.5} />
+                            <span className="hidden sm:inline">{lang === 'en' ? 'Edit' : 'አስተካክል'}</span>
                         </button>
                         <button
                             onClick={() => setActiveTab("preview")}
-                            className={cn("px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2", activeTab === "preview" ? "bg-neon text-background shadow-lg shadow-neon/20" : "text-primary/70 hover:text-primary")}
+                            className={cn(
+                                "px-4 md:px-6 py-2 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2.5",
+                                activeTab === "preview"
+                                    ? "bg-neon text-background shadow-[0_0_20px_rgba(var(--neon),0.3)]"
+                                    : "text-primary/60 hover:text-primary hover:bg-glass-stroke"
+                            )}
                         >
-                            <Eye size={14} /> {lang === 'en' ? 'Preview' : 'ቅድመ እይታ'}
+                            <Eye size={18} strokeWidth={2.5} />
+                            <span className="hidden sm:inline">{lang === 'en' ? 'Preview' : 'ቅድመ እይታ'}</span>
                         </button>
                     </div>
+
+                    {/* Action Hub */}
                     <button
                         onClick={handleCreate}
                         disabled={isLoading || !title || items.filter(i => i.url).length === 0}
-                        className="bg-primary hover:bg-neon hover:text-black hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 text-background px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-primary/20 flex items-center gap-2"
+                        className="group relative overflow-hidden bg-primary hover:bg-neon text-background px-5 md:px-8 py-2 md:py-3 rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-[0.3em] transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100 shadow-[0_10px_30px_rgba(var(--primary),0.2)] flex items-center gap-3"
                     >
-                        {isLoading ? <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" /> : <Rocket size={16} />}
-                        {lang === 'en' ? 'Live Now' : 'አሁኑኑ ልቀቅ'}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                        {isLoading ? (
+                            <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                            <Rocket size={18} className="group-hover:-translate-y-1 group-hover:translate-x-1 transition-transform" strokeWidth={2.5} />
+                        )}
+                        <span className="hidden sm:inline">{lang === 'en' ? 'Live Now' : 'አሁኑኑ ልቀቅ'}</span>
+                        <span className="sm:hidden">{lang === 'en' ? 'Live' : 'ሊቀቅ'}</span>
                     </button>
-                    <UserMenu />
                 </div>
-            </nav>
+            </Navbar>
 
             <main className="relative z-10 pt-28 pb-32 h-[calc(100vh-112px)] overflow-hidden">
                 <div className="max-w-[1400px] mx-auto px-6 h-full grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -414,6 +429,42 @@ export default function CreateBundlePage() {
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+
+                                    {/* Stealth Mode */}
+                                    <div className="glass-card p-10 rounded-[40px] border-glass-stroke shadow-xl bg-black/40 group/stealth hover:border-neon/30 transition-all">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-4">
+                                                <div className={cn(
+                                                    "p-3 rounded-2xl transition-all duration-500",
+                                                    isCloaked ? "bg-neon/10 text-neon shadow-[0_0_20px_rgba(0,242,255,0.2)]" : "bg-glass-fill text-primary/40"
+                                                )}>
+                                                    <Shield size={20} />
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-sm font-black text-contrast uppercase tracking-tighter italic">Stealth Protocol</h3>
+                                                    <p className="text-[9px] font-bold text-primary/30 uppercase tracking-widest group-hover/stealth:text-neon/50 transition-colors">Enterprise Privacy Mode</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => setIsCloaked(!isCloaked)}
+                                                className={cn(
+                                                    "w-14 h-8 rounded-full border-2 transition-all p-1 flex items-center relative",
+                                                    isCloaked ? "border-neon bg-neon/10" : "border-glass-stroke bg-glass-fill"
+                                                )}
+                                            >
+                                                <motion.div
+                                                    animate={{ x: isCloaked ? 24 : 0 }}
+                                                    className={cn(
+                                                        "w-6 h-6 rounded-full shadow-lg",
+                                                        isCloaked ? "bg-neon shadow-neon/40" : "bg-primary/20"
+                                                    )}
+                                                />
+                                            </button>
+                                        </div>
+                                        <p className="mt-6 text-[10px] font-bold text-primary/40 leading-relaxed uppercase tracking-widest italic px-2">
+                                            Enable cloaking to mask the source from bots and implement advanced referrer-less redirection protocols.
+                                        </p>
                                     </div>
                                 </div>
                             </div>

@@ -1,0 +1,20 @@
+
+C:\Users\abelb\Documents\url-shortner\frontend\app\edit\[slug]\page.tsx
+    8:5   warning  'ChevronLeft' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+   12:10  warning  'UserMenu' is defined but never used                                                                                   @typescript-eslint/no-unused-vars
+   32:42  error    Unexpected any. Specify a different type                                                                               @typescript-eslint/no-explicit-any
+   33:12  warning  'error' is assigned a value but never used                                                                             @typescript-eslint/no-unused-vars
+   62:56  error    Unexpected any. Specify a different type                                                                               @typescript-eslint/no-explicit-any
+   68:12  warning  'ownerId' is assigned a value but never used                                                                           @typescript-eslint/no-unused-vars
+   82:56  error    Unexpected any. Specify a different type                                                                               @typescript-eslint/no-explicit-any
+  112:23  error    Unexpected any. Specify a different type                                                                               @typescript-eslint/no-explicit-any
+  153:80  error    Unexpected any. Specify a different type                                                                               @typescript-eslint/no-explicit-any
+  189:54  error    Unexpected any. Specify a different type                                                                               @typescript-eslint/no-explicit-any
+  206:27  error    Unexpected any. Specify a different type                                                                               @typescript-eslint/no-explicit-any
+  214:8   warning  React Hook useEffect has a missing dependency: 'fetchCollaborators'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  222:25  error    Unexpected any. Specify a different type                                                                               @typescript-eslint/no-explicit-any
+  267:23  error    Unexpected any. Specify a different type                                                                               @typescript-eslint/no-explicit-any
+  784:83  warning  'i' is defined but never used                                                                                          @typescript-eslint/no-unused-vars
+
+Γ£û 15 problems (9 errors, 6 warnings)
+

@@ -12,13 +12,13 @@ import {
     Smartphone, MousePointer2, Fingerprint, Activity,
     BarChart2, Trash2, ShieldAlert, Clock, Lock,
     ChevronRight, Mail, Send, Share2, Heart,
-    Activity as ActivityIcon, Shield, Coffee
+    Activity as ActivityIcon, Shield, Coffee, Plus
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { ModernBackground } from "@/components/modern-background";
-import { cn } from "@/lib/utils";
-import { UserMenu } from "@/components/user-menu";
 import { useAuth } from "@/components/auth-context";
+import { Navbar } from "@/components/navbar";
+import { cn } from "@/lib/utils";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const AMHARIC_CHARS = "ሀለሐመሠረሰሸቀበተቸኀነኘአከኸወዐዘዠየደጀገጠጨጰጸፀፈፐ";
@@ -181,6 +181,9 @@ export default function Home() {
     const [historyLimit, setHistoryLimit] = useState(10);
     const [metaTitle, setMetaTitle] = useState("");
     const [metaDescription, setMetaDescription] = useState("");
+    const [isCloaked, setIsCloaked] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 5;
     const { token } = useAuth();
 
     const clearHistory = () => {
@@ -191,18 +194,23 @@ export default function Home() {
     };
 
     useEffect(() => {
+        setCurrentPage(1);
+    }, [historyFilter]);
+
+    useEffect(() => {
         setMounted(true);
         const saved = localStorage.getItem("recent_urls");
         if (saved) setRecentUrls(JSON.parse(saved));
-        const savedLang = localStorage.getItem("app_lang");
-        if (savedLang === "am" || savedLang === "en") setLang(savedLang);
+
+        const updateLang = () => {
+            const savedLang = localStorage.getItem("app_lang");
+            if (savedLang === "am" || savedLang === "en") setLang(savedLang);
+        };
+        updateLang();
+        window.addEventListener('language-change', updateLang);
+        return () => window.removeEventListener('language-change', updateLang);
     }, []);
 
-    const toggleLang = () => {
-        const newLang = lang === "en" ? "am" : "en";
-        setLang(newLang);
-        localStorage.setItem("app_lang", newLang);
-    };
 
     const t = TRANSLATIONS[lang];
 
@@ -240,6 +248,7 @@ export default function Home() {
                     password: password || undefined,
                     meta_title: metaTitle || undefined,
                     meta_description: metaDescription || undefined,
+                    is_cloaked: isCloaked,
                 }),
             });
 
@@ -251,6 +260,7 @@ export default function Home() {
             const data = await res.json();
             setResult(data);
             setPassword("");
+            setIsCloaked(false);
             const updated = [data, ...recentUrls.filter(u => u.slug !== data.slug)];
             setRecentUrls(updated);
             localStorage.setItem("recent_urls", JSON.stringify(updated.slice(0, 50)));
@@ -284,29 +294,18 @@ export default function Home() {
         >
             <ModernBackground />
 
-            {/* Navigation */}
-            <nav className="fixed top-0 w-full z-50 px-4 md:px-6 py-4 flex justify-between items-center bg-background/5 backdrop-blur-md border-b border-glass-stroke">
-                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2 md:gap-3">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-primary flex items-center justify-center text-background font-black text-xl md:text-2xl shadow-xl shadow-primary/20 rotate-3 transform hover:rotate-0 transition-transform">ቀ</div>
-                    <span className="font-black text-2xl md:text-3xl tracking-tighter uppercase whitespace-nowrap text-foreground">
-                        ቀላል<span className="text-primary italic underline decoration-neon decoration-4 underline-offset-4">LINK</span>
-                    </span>
-                </motion.div>
-
-                <div className="flex items-center gap-2 md:gap-4">
-                    <button onClick={toggleLang} className="px-4 md:px-6 py-3 md:py-4 rounded-2xl md:rounded-3xl glass-card border-glass-stroke hover:border-primary transition-all text-primary font-black text-xs uppercase tracking-widest border-2">
-                        {lang === "en" ? "AM" : "EN"}
-                    </button>
-                    <button onClick={toggleTheme} className="p-3 md:p-4 rounded-2xl md:rounded-3xl glass-card border-glass-stroke hover:border-primary transition-all text-primary border-2">
-                        <AnimatePresence mode="wait">
-                            <motion.div key={resolvedTheme} initial={{ scale: 0, rotate: -180, opacity: 0 }} animate={{ scale: 1, rotate: 0, opacity: 1 }} exit={{ scale: 0, rotate: 180, opacity: 0 }} className="text-primary">
-                                {resolvedTheme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
-                            </motion.div>
-                        </AnimatePresence>
-                    </button>
-                    <UserMenu />
-                </div>
-            </nav>
+            <Navbar>
+                {token && (
+                    <Link
+                        href="/create"
+                        className="group relative overflow-hidden bg-primary hover:bg-neon text-background px-4 md:px-6 py-2 md:py-2.5 rounded-xl md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] transition-all shadow-[0_10px_30px_rgba(var(--primary),0.2)] flex items-center gap-2.5 hover:scale-105 mr-2"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                        <Plus size={16} strokeWidth={2.5} />
+                        <span className="hidden md:inline">New Drop</span>
+                    </Link>
+                )}
+            </Navbar>
 
             <main className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 pt-28 md:pt-40 pb-20">
                 <div className="grid lg:grid-cols-12 gap-8 md:gap-12 items-start">
@@ -323,23 +322,24 @@ export default function Home() {
                     <div className="lg:col-span-11 grid lg:grid-cols-2 gap-10 md:gap-16">
                         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 md:space-y-8">
                             <div className="inline-block px-4 md:px-5 py-2 glass-card rounded-full border-primary/20 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-primary">{t.heroPre}</div>
-                            <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black leading-[0.85] tracking-tighter text-contrast uppercase italic">
+                            <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black leading-[0.9] md:leading-[0.85] tracking-tighter text-contrast uppercase italic">
                                 {t.heroTitle1} <br />
-                                <span className="text-neon italic underline decoration-neon/40 decoration-8 underline-offset-8">{t.heroTitle2}</span> <br />
+                                <span className="text-neon italic underline decoration-neon/40 decoration-4 md:decoration-8 underline-offset-4 md:underline-offset-8">{t.heroTitle2}</span> <br />
                                 {t.heroTitle3}
                             </h1>
-                            <div className="flex gap-4 items-center">
-                                <div className="h-0.5 w-8 md:w-12 bg-primary" />
-                                <p className="text-lg md:text-xl font-bold text-foreground/80 max-w-sm italic leading-relaxed">{t.heroSlogan}</p>
+                            <div className="flex gap-4 items-start sm:items-center">
+                                <div className="h-0.5 w-6 md:w-12 bg-primary mt-3 sm:mt-0" />
+                                <p className="text-base md:text-xl font-bold text-foreground/80 max-w-sm italic leading-relaxed">{t.heroSlogan}</p>
                             </div>
-                            <div className="flex gap-8 md:gap-12 pt-4 md:pt-8">
-                                <div className="space-y-1 text-center sm:text-left">
-                                    <p className="text-3xl md:text-4xl font-black text-primary text-contrast">{t.statSpeed}</p>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">{t.statSpeedLabel}</p>
+                            <div className="flex gap-6 md:gap-12 pt-4 md:pt-8 overflow-hidden">
+                                <div className="space-y-1 text-left">
+                                    <p className="text-2xl md:text-4xl font-black text-primary text-contrast leading-none">{t.statSpeed}</p>
+                                    <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-primary/60">{t.statSpeedLabel}</p>
                                 </div>
-                                <div className="space-y-1 text-center sm:text-left">
-                                    <p className="text-3xl md:text-4xl font-black text-primary text-contrast">{t.statPrivacy}</p>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">{t.statPrivacyLabel}</p>
+                                <div className="h-10 w-px bg-glass-stroke mt-1" />
+                                <div className="space-y-1 text-left">
+                                    <p className="text-2xl md:text-4xl font-black text-primary text-contrast leading-none">{t.statPrivacy}</p>
+                                    <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-primary/60">{t.statPrivacyLabel}</p>
                                 </div>
                             </div>
                         </motion.div>
@@ -348,84 +348,153 @@ export default function Home() {
                         <div className="relative group">
                             <div className="absolute -inset-4 bg-primary/10 rounded-[40px] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                             <div className="relative glass-card rounded-[36px] p-8 md:p-12 border-glass-stroke overflow-hidden shadow-2xl">
-                                <div className="flex items-center gap-4 mb-8">
-                                    <button type="button" onClick={() => setIsBundleMode(false)} className={cn("flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all", !isBundleMode ? "bg-primary text-background shadow-lg" : "bg-glass-fill text-primary/80 hover:bg-glass-stroke")}>Single Drop</button>
-                                    <button type="button" onClick={() => setIsBundleMode(true)} className={cn("flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all", isBundleMode ? "bg-neon text-background shadow-lg shadow-neon/20" : "bg-glass-fill text-neon/90 hover:bg-glass-stroke")}>Bundle (Pro)</button>
+                                <div className="flex bg-glass-fill/40 p-1.5 rounded-3xl border border-glass-stroke backdrop-blur-3xl mb-10">
+                                    <button type="button" onClick={() => setIsBundleMode(false)} className={cn("relative flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all duration-500 overflow-hidden group", !isBundleMode ? "text-background" : "text-primary/60 hover:text-primary")}>
+                                        {!isBundleMode && <motion.div layoutId="mode-bg" className="absolute inset-0 bg-primary" transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} />}
+                                        <span className="relative z-10">Single Drop</span>
+                                    </button>
+                                    <button type="button" onClick={() => setIsBundleMode(true)} className={cn("relative flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all duration-500 overflow-hidden group", isBundleMode ? "text-background" : "text-neon/60 hover:text-neon")}>
+                                        {isBundleMode && <motion.div layoutId="mode-bg" className="absolute inset-0 bg-neon" transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} />}
+                                        <span className="relative z-10">Studio (Pro)</span>
+                                    </button>
                                 </div>
 
                                 <form onSubmit={handleShorten} className="space-y-8 relative z-10">
                                     {!isBundleMode ? (
                                         <>
-                                            <div className="space-y-4">
-                                                <label className="text-sm font-black uppercase tracking-[0.4em] text-primary/40 ml-2">{t.inputLongLabel}</label>
+                                            {/* Protocol 01: Core Destination */}
+                                            <div className="space-y-6">
+                                                <div className="flex justify-between items-end px-2">
+                                                    <label className="text-[10px] font-black uppercase tracking-[0.5em] text-primary/40 leading-none">Target Link</label>
+                                                    <span className="text-[8px] font-bold text-neon uppercase tracking-widest opacity-40">Required</span>
+                                                </div>
                                                 <div className="relative group/field">
-                                                    <div className="absolute inset-y-0 left-6 flex items-center text-primary group-focus-within/field:text-neon transition-colors z-10"><Link2 size={24} /></div>
-                                                    <input type="url" required placeholder={t.inputLongPlaceholder} value={longUrl} onChange={(e) => setLongUrl(e.target.value)} className="w-full input-style rounded-[24px] py-7 pl-16 pr-8 text-lg font-bold placeholder:text-foreground/30 outline-none transition-all shadow-inner backdrop-blur-sm relative z-0 border-2 border-glass-stroke focus:border-neon text-foreground" />
+                                                    <div className="absolute inset-y-0 left-6 flex items-center text-primary group-focus-within/field:text-neon transition-colors z-10">
+                                                        <Link2 size={24} strokeWidth={2.5} />
+                                                    </div>
+                                                    <input
+                                                        type="url"
+                                                        required
+                                                        placeholder={t.inputLongPlaceholder}
+                                                        value={longUrl}
+                                                        onChange={(e) => setLongUrl(e.target.value)}
+                                                        className="w-full bg-glass-fill/20 border-2 border-glass-stroke rounded-[24px] py-6 pl-16 pr-8 text-base font-bold placeholder:text-foreground/20 outline-none transition-all focus:border-primary/50 focus:bg-primary/5"
+                                                    />
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-4">
-                                                <label className="text-sm font-black uppercase tracking-[0.4em] text-primary/70 ml-2">{t.inputAliasLabel}</label>
-                                                <div className="relative group/field">
-                                                    <div className="absolute inset-y-0 left-6 flex items-center text-primary group-focus-within/field:text-neon transition-colors z-10"><span className="font-black text-2xl">ሊ</span></div>
-                                                    <input type="text" placeholder={t.inputAliasPlaceholder} value={customSlug} onChange={(e) => setCustomSlug(e.target.value)} className="w-full input-style rounded-[24px] py-7 pl-16 pr-8 text-lg font-bold placeholder:text-foreground/30 outline-none transition-all shadow-inner backdrop-blur-sm relative z-0 border-2 border-glass-stroke focus:border-neon text-foreground" />
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-4">
-                                                <label className="text-sm font-black uppercase tracking-[0.4em] text-primary/70 ml-2">{t.inputPasswordLabel}</label>
-                                                <div className="relative group/field">
-                                                    <div className="absolute inset-y-0 left-6 flex items-center text-primary group-focus-within/field:text-neon transition-colors z-10"><Lock size={20} /></div>
-                                                    <input type="password" placeholder={t.inputPasswordPlaceholder} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full input-style rounded-[24px] py-7 pl-16 pr-8 text-lg font-bold placeholder:text-foreground/30 outline-none transition-all shadow-inner backdrop-blur-sm relative z-0 border-2 border-glass-stroke focus:border-neon text-foreground" />
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-6 p-8 rounded-3xl bg-orange-500/5 border border-orange-500/10 transition-all">
-                                                <div className="flex items-center gap-3 mb-2">
-                                                    <Share2 size={18} className="text-orange-500" />
-                                                    <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-orange-500">SEO & Social Mastery</h4>
-                                                </div>
+                                            {/* Protocol 02: Native Masking */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 <div className="space-y-4">
+                                                    <div className="flex justify-between items-end px-2">
+                                                        <label className="text-[10px] font-black uppercase tracking-[0.5em] text-primary/40 leading-none">Custom Name</label>
+                                                        <span className="text-[8px] font-bold text-primary/20 uppercase tracking-widest">Optional</span>
+                                                    </div>
                                                     <div className="relative group/field">
+                                                        <div className="absolute inset-y-0 left-6 flex items-center text-primary/60 group-focus-within/field:text-primary transition-colors z-10">
+                                                            <Fingerprint size={20} strokeWidth={2.5} />
+                                                        </div>
                                                         <input
                                                             type="text"
-                                                            placeholder="Preview Title..."
-                                                            value={metaTitle}
-                                                            onChange={(e) => setMetaTitle(e.target.value)}
-                                                            className="w-full bg-glass-fill border-2 border-glass-stroke rounded-2xl py-4 px-6 text-sm font-bold outline-none focus:border-orange-500 transition-all text-contrast"
+                                                            placeholder={t.inputAliasPlaceholder}
+                                                            value={customSlug}
+                                                            onChange={(e) => setCustomSlug(e.target.value)}
+                                                            className="w-full bg-glass-fill/10 border-2 border-glass-stroke rounded-2xl py-4 pl-14 pr-6 text-sm font-bold placeholder:text-foreground/10 outline-none transition-all focus:border-primary/30"
                                                         />
                                                     </div>
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    <div className="flex justify-between items-end px-2">
+                                                        <label className="text-[10px] font-black uppercase tracking-[0.5em] text-primary/40 leading-none">Protection</label>
+                                                        <span className="text-[8px] font-bold text-primary/20 uppercase tracking-widest">Password</span>
+                                                    </div>
                                                     <div className="relative group/field">
-                                                        <textarea
-                                                            rows={2}
-                                                            placeholder="Social Description..."
-                                                            value={metaDescription}
-                                                            onChange={(e) => setMetaDescription(e.target.value)}
-                                                            className="w-full bg-glass-fill border-2 border-glass-stroke rounded-2xl py-4 px-6 text-sm font-bold outline-none focus:border-orange-500 transition-all text-contrast resize-none"
+                                                        <div className="absolute inset-y-0 left-6 flex items-center text-primary/60 group-focus-within/field:text-primary transition-colors z-10">
+                                                            <Lock size={18} strokeWidth={2.5} />
+                                                        </div>
+                                                        <input
+                                                            type="password"
+                                                            placeholder={t.inputPasswordPlaceholder}
+                                                            value={password}
+                                                            onChange={(e) => setPassword(e.target.value)}
+                                                            className="w-full bg-glass-fill/10 border-2 border-glass-stroke rounded-2xl py-4 pl-14 pr-6 text-sm font-bold placeholder:text-foreground/10 outline-none transition-all focus:border-primary/30"
                                                         />
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-6 p-8 rounded-3xl bg-red-500/5 border border-red-500/10 group/destruction">
-                                                <div className="flex items-center gap-3 mb-2">
-                                                    <Trash2 size={18} className="text-red-500 animate-pulse" />
-                                                    <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-red-500">{t.destructionTitle}</h4>
+                                            {/* Protocol 03: Intelligence Hub */}
+                                            <div className="p-1 rounded-[32px] bg-gradient-to-br from-primary/10 to-transparent border border-primary/5">
+                                                <div className="p-6 space-y-6">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                                                <Share2 size={16} />
+                                                            </div>
+                                                            <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-primary">Link Preview</h4>
+                                                        </div>
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="flex flex-col items-end">
+                                                                <span className="text-[8px] font-black text-neon uppercase tracking-widest">{isCloaked ? 'Private' : 'Public'}</span>
+                                                                <span className="text-[6px] font-bold text-primary/30 uppercase tracking-widest">Privacy Mode</span>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setIsCloaked(!isCloaked)}
+                                                                className={cn(
+                                                                    "w-10 h-5 rounded-full border transition-all p-0.5 flex items-center relative",
+                                                                    isCloaked ? "border-neon bg-neon/10" : "border-glass-stroke bg-glass-fill"
+                                                                )}
+                                                            >
+                                                                <motion.div animate={{ x: isCloaked ? 20 : 0 }} className={cn("w-3.5 h-3.5 rounded-full shadow-lg", isCloaked ? "bg-neon shadow-neon/40" : "bg-primary/20")} />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Meta Title..."
+                                                            value={metaTitle}
+                                                            onChange={(e) => setMetaTitle(e.target.value)}
+                                                            className="w-full bg-glass-fill/20 border-2 border-glass-stroke rounded-2xl py-3 px-5 text-xs font-bold outline-none focus:border-primary/30 transition-all text-contrast"
+                                                        />
+                                                        <textarea
+                                                            rows={1}
+                                                            placeholder="Description..."
+                                                            value={metaDescription}
+                                                            onChange={(e) => setMetaDescription(e.target.value)}
+                                                            className="w-full bg-glass-fill/20 border-2 border-glass-stroke rounded-2xl py-3 px-5 text-xs font-bold outline-none focus:border-primary/30 transition-all text-contrast resize-none"
+                                                        />
+                                                    </div>
                                                 </div>
-                                                <div className="grid grid-cols-2 gap-8">
-                                                    <div className="space-y-3">
-                                                        <div className="flex items-center gap-2"><Clock size={14} className="text-red-600" /><span className="text-[10px] font-black uppercase tracking-widest text-red-600">{t.burnAfter}</span></div>
+                                            </div>
+
+                                            {/* Expiry Settings */}
+                                            <div className="p-8 rounded-[32px] bg-red-500/5 border border-red-500/10 space-y-6 relative overflow-hidden group/destruction">
+                                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover/destruction:opacity-10 transition-opacity">
+                                                    <ShieldAlert size={80} strokeWidth={1} className="text-red-500" />
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <Activity size={16} className="text-red-500 animate-pulse" />
+                                                    <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-red-500">Auto-Delete</h4>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+                                                    <div className="space-y-4">
+                                                        <span className="text-[8px] font-black uppercase tracking-widest text-red-500/40 px-1">Delete After</span>
                                                         <div className="flex flex-wrap gap-2">
-                                                            {[{ label: t.burnManual, val: 0 }, { label: t.burn1h, val: 3600 }, { label: t.burn24h, val: 86400 }, { label: t.burnCustom, val: -1 }].map(opt => (
-                                                                <button key={opt.val} type="button" onClick={() => setExpiresIn(opt.val)} className={cn("px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border", expiresIn === opt.val ? "bg-red-500 text-white border-red-500" : "bg-red-500/10 text-red-600/80 border-red-500/20")}>{opt.label}</button>
+                                                            {[{ label: 'Never', val: 0 }, { label: '1 Hour', val: 3600 }, { label: '24 Hours', val: 86400 }, { label: 'Custom', val: -1 }].map(opt => (
+                                                                <button key={opt.val} type="button" onClick={() => setExpiresIn(opt.val)} className={cn("px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border", expiresIn === opt.val ? "bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/20" : "bg-red-500/10 text-red-500/80 border-red-500/10 hover:border-red-500/30")}>{opt.label}</button>
                                                             ))}
                                                         </div>
                                                     </div>
-                                                    <div className="space-y-3">
-                                                        <div className="flex items-center gap-2"><ShieldAlert size={14} className="text-red-600" /><span className="text-[10px] font-black uppercase tracking-widest text-red-600">{t.clicksLimit}</span></div>
+                                                    <div className="space-y-4">
+                                                        <span className="text-[8px] font-black uppercase tracking-widest text-red-500/40 px-1">Click Limit</span>
                                                         <div className="flex flex-wrap gap-2">
-                                                            {[{ label: t.clicksUnlimited, val: 0 }, { label: "5", val: 5 }, { label: "10", val: 10 }].map(opt => (
-                                                                <button key={opt.val} type="button" onClick={() => setMaxClicks(opt.val)} className={cn("px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border", maxClicks === opt.val ? "bg-red-500 text-white border-red-500" : "bg-red-500/10 text-red-600/80 border-red-500/20")}>{opt.label}</button>
+                                                            {[{ label: 'Unlimited', val: 0 }, { label: '5 Clicks', val: 5 }, { label: '10 Clicks', val: 10 }, { label: '25 Clicks', val: 25 }].map(opt => (
+                                                                <button key={opt.val} type="button" onClick={() => setMaxClicks(opt.val)} className={cn("px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border", maxClicks === opt.val ? "bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/20" : "bg-red-500/10 text-red-500/80 border-red-500/10 hover:border-red-500/30")}>{opt.label}</button>
                                                             ))}
                                                         </div>
                                                     </div>
@@ -458,8 +527,11 @@ export default function Home() {
                                         </motion.div>
                                     )}
 
-                                    <button disabled={isLoading} className="w-full bg-primary hover:bg-neon hover:text-black hover:scale-[1.02] active:scale-95 disabled:opacity-50 text-background font-black py-7 px-10 rounded-[24px] transition-all shadow-xl text-xl uppercase tracking-widest flex items-center justify-center gap-4 group/btn">
-                                        {isLoading ? t.buttonLoading : <>{t.buttonShorten} <ArrowRight size={24} className="group-hover:translate-x-2 transition-transform" /></>}
+                                    <button disabled={isLoading} className="relative w-full group/main overflow-hidden py-6 rounded-[28px] bg-primary text-background font-black uppercase tracking-[0.4em] text-sm shadow-2xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/main:translate-x-full transition-transform duration-1000" />
+                                        <span className="flex items-center justify-center gap-4 relative z-10">
+                                            {isLoading ? t.buttonLoading : <>{t.buttonShorten} <ArrowRight size={24} className="group-hover/main:translate-x-2 transition-transform" /></>}
+                                        </span>
                                     </button>
                                 </form>
                             </div>
@@ -485,48 +557,102 @@ export default function Home() {
 
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                         <div className="lg:col-span-8 space-y-4 md:space-y-6">
-                            {recentUrls
-                                .filter(u => {
-                                    if (historyFilter === "all" || historyFilter === "top") return true;
-                                    if (historyFilter === "bundle") return !!u.title || Array.isArray(u.items);
-                                    return !u.title && !Array.isArray(u.items);
-                                })
-                                .sort((a, b) => historyFilter === "top" ? (b.clicks || 0) - (a.clicks || 0) : 0)
-                                .slice(0, historyLimit)
-                                .map((u, i) => (
-                                    <motion.div key={u.slug + i} initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="group flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-5 md:p-8 rounded-[32px] glass-card border-glass-stroke hover:border-primary/20 hover:bg-primary/5 transition-all gap-5">
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <span className="text-xl md:text-3xl font-black text-primary truncate">{u.slug}</span>
-                                                {(u.title || Array.isArray(u.items)) && (
-                                                    <span
-                                                        className="text-[10px] font-black py-1 px-3 rounded-full uppercase tracking-widest italic flex items-center gap-1 border border-white/5 transition-colors"
-                                                        style={{ backgroundColor: (u.theme_color || '#00f2ff') + '20', color: u.theme_color || '#00f2ff' }}
-                                                    >
-                                                        <Layers size={10} /> STUDIO
-                                                    </span>
-                                                )}
+                            {(() => {
+                                const filtered = recentUrls
+                                    .filter(u => {
+                                        if (historyFilter === "all" || historyFilter === "top") return true;
+                                        if (historyFilter === "bundle") return !!u.title || Array.isArray(u.items);
+                                        return !u.title && !Array.isArray(u.items);
+                                    })
+                                    .sort((a, b) => historyFilter === "top" ? (b.clicks || 0) - (a.clicks || 0) : 0);
+
+                                const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+                                const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+                                return (
+                                    <>
+                                        {paginated.map((u, i) => (
+                                            <motion.div
+                                                key={u.slug + i}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: i * 0.1 }}
+                                                className="group flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-5 md:p-8 rounded-[32px] glass-card border-glass-stroke hover:border-primary/20 hover:bg-primary/5 transition-all gap-5"
+                                            >
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center gap-3 mb-2">
+                                                        <span className="text-xl md:text-3xl font-black text-primary truncate">{u.slug}</span>
+                                                        {(u.title || Array.isArray(u.items)) && (
+                                                            <span
+                                                                className="text-[10px] font-black py-1 px-3 rounded-full uppercase tracking-widest italic flex items-center gap-1 border border-white/5 transition-colors"
+                                                                style={{ backgroundColor: (u.theme_color || '#00f2ff') + '20', color: u.theme_color || '#00f2ff' }}
+                                                            >
+                                                                <Layers size={10} /> STUDIO
+                                                            </span>
+                                                        )}
+                                                        {u.is_cloaked && <Shield size={12} className="text-neon" />}
+                                                    </div>
+                                                    <p className="text-foreground/40 text-[11px] md:text-sm truncate font-bold font-mono">{u.title || u.long_url || "Untitled Drop"}</p>
+                                                </div>
+                                                <div className="flex items-center justify-between sm:justify-end gap-6 md:gap-8 pt-4 sm:pt-0 border-t sm:border-t-0 border-glass-stroke">
+                                                    <div className="text-left sm:text-right">
+                                                        <span className="text-xl md:text-3xl font-black text-contrast block leading-none">{u.clicks || 0}</span>
+                                                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/60">VIBES</span>
+                                                    </div>
+                                                    <div className="flex gap-1">
+                                                        <button onClick={() => copyToClipboard(`${window.location.protocol}//${window.location.host}/${u.slug}`)} className="p-3 rounded-xl hover:bg-primary/20 text-foreground/40 hover:text-primary transition-all"><Copy size={16} /></button>
+                                                        <Link href={`/stats/${u.slug}`} className="p-3 rounded-xl hover:bg-primary/10 text-primary/40 hover:text-primary transition-all"><Activity size={16} /></Link>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        ))}
+
+                                        {filtered.length > 0 && totalPages > 1 && (
+                                            <div className="flex items-center justify-center gap-2 mt-12 py-6 border-t border-glass-stroke">
+                                                <button
+                                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                    disabled={currentPage === 1}
+                                                    className="p-4 rounded-2xl glass-card border-glass-stroke text-primary disabled:opacity-20 hover:bg-primary hover:text-background transition-all"
+                                                >
+                                                    <ChevronRight size={20} className="rotate-180" />
+                                                </button>
+
+                                                <div className="flex gap-2">
+                                                    {Array.from({ length: totalPages }).map((_, i) => (
+                                                        <button
+                                                            key={i}
+                                                            onClick={() => setCurrentPage(i + 1)}
+                                                            className={cn(
+                                                                "w-12 h-12 rounded-2xl font-black text-xs transition-all",
+                                                                currentPage === i + 1
+                                                                    ? "bg-primary text-background shadow-xl scale-110"
+                                                                    : "glass-card border-glass-stroke text-primary/40 hover:text-primary hover:border-primary/40"
+                                                            )}
+                                                        >
+                                                            {(i + 1).toString().padStart(2, '0')}
+                                                        </button>
+                                                    ))}
+                                                </div>
+
+                                                <button
+                                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                                    disabled={currentPage === totalPages}
+                                                    className="p-4 rounded-2xl glass-card border-glass-stroke text-primary disabled:opacity-20 hover:bg-primary hover:text-background transition-all"
+                                                >
+                                                    <ChevronRight size={20} />
+                                                </button>
                                             </div>
-                                            <p className="text-foreground/40 text-[11px] md:text-sm truncate font-bold font-mono">{u.title || u.long_url || "Untitled Drop"}</p>
-                                        </div>
-                                        <div className="flex items-center justify-between sm:justify-end gap-6 md:gap-8 pt-4 sm:pt-0 border-t sm:border-t-0 border-glass-stroke">
-                                            <div className="text-left sm:text-right">
-                                                <span className="text-xl md:text-3xl font-black text-contrast block leading-none">{u.clicks || 0}</span>
-                                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/60">VIBES</span>
+                                        )}
+
+                                        {filtered.length === 0 && (
+                                            <div className="p-20 rounded-[40px] border-2 border-dashed border-glass-stroke flex flex-col items-center justify-center glass-card">
+                                                <Sparkles size={48} className="text-primary/10 mb-6" />
+                                                <p className="font-black text-xs uppercase tracking-[0.5em] text-primary/20 text-center">{t.historyEmpty}</p>
                                             </div>
-                                            <div className="flex gap-1">
-                                                <button onClick={() => copyToClipboard(`${window.location.protocol}//${window.location.host}/${u.slug}`)} className="p-3 rounded-xl hover:bg-primary/20 text-foreground/40 hover:text-primary transition-all"><Copy size={16} /></button>
-                                                <Link href={`/stats/${u.slug}`} className="p-3 rounded-xl hover:bg-primary/10 text-primary/40 hover:text-primary transition-all"><Activity size={16} /></Link>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            {recentUrls.length === 0 && (
-                                <div className="p-20 rounded-[40px] border-2 border-dashed border-glass-stroke flex flex-col items-center justify-center glass-card">
-                                    <Sparkles size={48} className="text-primary/10 mb-6" />
-                                    <p className="font-black text-xs uppercase tracking-[0.5em] text-primary/20 text-center">{t.historyEmpty}</p>
-                                </div>
-                            )}
+                                        )}
+                                    </>
+                                );
+                            })()}
                         </div>
 
                         {/* Sidebar */}

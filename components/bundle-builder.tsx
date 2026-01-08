@@ -37,9 +37,10 @@ interface SortableItemProps {
     onToggleSpotlight: (id: string) => void;
     onRemove: (id: string) => void;
     lang: 'en' | 'am';
+    readOnly?: boolean;
 }
 
-function SortableItem({ id, link, onUpdate, onToggleSpotlight, onRemove, lang }: SortableItemProps) {
+function SortableItem({ id, link, onUpdate, onToggleSpotlight, onRemove, lang, readOnly }: SortableItemProps) {
     const {
         attributes,
         listeners,
@@ -69,7 +70,10 @@ function SortableItem({ id, link, onUpdate, onToggleSpotlight, onRemove, lang }:
                 <div
                     {...attributes}
                     {...listeners}
-                    className="mt-3 p-2 cursor-grab active:cursor-grabbing rounded-xl hover:bg-glass-fill text-primary/60 hover:text-primary transition-colors"
+                    className={cn(
+                        "mt-3 p-2 rounded-xl text-primary/60 transition-colors",
+                        readOnly ? "cursor-default opacity-20" : "cursor-grab active:cursor-grabbing hover:bg-glass-fill hover:text-primary"
+                    )}
                 >
                     <GripVertical size={20} />
                 </div>
@@ -84,7 +88,8 @@ function SortableItem({ id, link, onUpdate, onToggleSpotlight, onRemove, lang }:
                             placeholder={lang === 'en' ? "Link Title (e.g. My Telegram)" : "የሊንኩ ስም (ለምሳሌ፡ የኔ ቴሌግራም)"}
                             value={link.label}
                             onChange={(e) => onUpdate(id, 'label', e.target.value)}
-                            className="w-full bg-glass-fill border border-glass-stroke rounded-2xl py-3 pl-12 pr-4 text-sm font-bold outline-none focus:border-neon focus:bg-background transition-all"
+                            className="w-full bg-glass-fill border border-glass-stroke rounded-2xl py-3 pl-12 pr-4 text-sm font-bold outline-none focus:border-neon focus:bg-background transition-all disabled:opacity-50"
+                            disabled={readOnly}
                         />
                     </div>
 
@@ -104,29 +109,32 @@ function SortableItem({ id, link, onUpdate, onToggleSpotlight, onRemove, lang }:
                                     if (info.label) onUpdate(id, 'label', info.label);
                                 }
                             }}
-                            className="w-full bg-glass-fill border border-glass-stroke rounded-2xl py-3 pl-12 pr-4 text-sm font-mono outline-none focus:border-neon focus:bg-background transition-all"
+                            className="w-full bg-glass-fill border border-glass-stroke rounded-2xl py-3 pl-12 pr-4 text-sm font-mono outline-none focus:border-neon focus:bg-background transition-all disabled:opacity-50"
+                            disabled={readOnly}
                         />
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-2 mt-3">
-                    <button
-                        onClick={() => onToggleSpotlight(id)}
-                        className={cn(
-                            "p-3 rounded-2xl transition-all",
-                            link.isSpotlight ? "bg-neon text-background shadow-lg shadow-neon/40" : "hover:bg-glass-fill text-primary/40 hover:text-neon"
-                        )}
-                        title={lang === 'en' ? "Spotlight Link" : "ሊንኩን አጉላ"}
-                    >
-                        <Sparkles size={20} className={link.isSpotlight ? "animate-pulse" : ""} />
-                    </button>
-                    <button
-                        onClick={() => onRemove(id)}
-                        className="p-3 rounded-2xl hover:bg-red-500/10 text-red-500/60 hover:text-red-500 transition-all text-sm font-black"
-                    >
-                        <Trash2 size={20} />
-                    </button>
-                </div>
+                {!readOnly && (
+                    <div className="flex flex-col gap-2 mt-3">
+                        <button
+                            onClick={() => onToggleSpotlight(id)}
+                            className={cn(
+                                "p-3 rounded-2xl transition-all",
+                                link.isSpotlight ? "bg-neon text-background shadow-lg shadow-neon/40" : "hover:bg-glass-fill text-primary/40 hover:text-neon"
+                            )}
+                            title={lang === 'en' ? "Spotlight Link" : "ሊንኩን አጉላ"}
+                        >
+                            <Sparkles size={20} className={link.isSpotlight ? "animate-pulse" : ""} />
+                        </button>
+                        <button
+                            onClick={() => onRemove(id)}
+                            className="p-3 rounded-2xl hover:bg-red-500/10 text-red-500/60 hover:text-red-500 transition-all text-sm font-black"
+                        >
+                            <Trash2 size={20} />
+                        </button>
+                    </div>
+                )}
             </div>
         </motion.div>
     );
@@ -140,6 +148,7 @@ interface BundleBuilderProps {
     items: LinkItem[];
     setItems: (items: LinkItem[]) => void;
     lang: 'en' | 'am';
+    readOnly?: boolean;
 }
 
 export function BundleBuilder({
@@ -149,7 +158,8 @@ export function BundleBuilder({
     setDescription,
     items,
     setItems,
-    lang
+    lang,
+    readOnly
 }: BundleBuilderProps) {
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -218,7 +228,8 @@ export function BundleBuilder({
                             placeholder={lang === 'en' ? "My Social Hub" : "የኔ ማህበራዊ ገጽ"}
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="w-full bg-glass-fill border border-glass-stroke rounded-2xl py-4 px-6 text-lg font-black outline-none focus:border-neon focus:bg-background transition-all text-contrast"
+                            className="w-full bg-glass-fill border border-glass-stroke rounded-2xl py-4 px-6 text-lg font-black outline-none focus:border-neon focus:bg-background transition-all text-contrast disabled:opacity-50"
+                            disabled={readOnly}
                         />
                     </div>
 
@@ -231,7 +242,8 @@ export function BundleBuilder({
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             rows={2}
-                            className="w-full bg-glass-fill border border-glass-stroke rounded-2xl py-4 px-6 text-sm font-bold outline-none focus:border-neon focus:bg-background transition-all resize-none"
+                            className="w-full bg-glass-fill border border-glass-stroke rounded-2xl py-4 px-6 text-sm font-bold outline-none focus:border-neon focus:bg-background transition-all resize-none disabled:opacity-50"
+                            disabled={readOnly}
                         />
                     </div>
                 </div>
@@ -244,13 +256,15 @@ export function BundleBuilder({
                         {lang === 'en' ? 'DRAGGABLE LINKS' : 'ተንቀሳቃሽ ሊንኮች'}
                     </h4>
                     <div className="flex items-center gap-6">
-                        <button
-                            onClick={shuffleItems}
-                            className="flex items-center gap-2 text-[10px] font-black text-primary/40 hover:text-neon transition-colors uppercase tracking-widest group/shuffle"
-                        >
-                            <Shuffle size={12} className="group-hover/shuffle:rotate-180 transition-transform duration-500" />
-                            {lang === 'en' ? 'SHUFFLE Order' : 'ቅደም ተከተል ቀይር'}
-                        </button>
+                        {!readOnly && (
+                            <button
+                                onClick={shuffleItems}
+                                className="flex items-center gap-2 text-[10px] font-black text-primary/40 hover:text-neon transition-colors uppercase tracking-widest group/shuffle"
+                            >
+                                <Shuffle size={12} className="group-hover/shuffle:rotate-180 transition-transform duration-500" />
+                                {lang === 'en' ? 'SHUFFLE Order' : 'ቅደም ተከተል ቀይር'}
+                            </button>
+                        )}
                         <span className="text-[10px] font-black text-neon">{items.length} LINKS</span>
                     </div>
                 </div>
@@ -258,7 +272,7 @@ export function BundleBuilder({
                 <DndContext
                     sensors={sensors}
                     collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
+                    onDragEnd={readOnly ? undefined : handleDragEnd}
                 >
                     <SortableContext
                         items={items.map(i => i.id)}
@@ -273,18 +287,21 @@ export function BundleBuilder({
                                 onToggleSpotlight={toggleSpotlight}
                                 onRemove={removeItem}
                                 lang={lang}
+                                readOnly={readOnly}
                             />
                         ))}
                     </SortableContext>
                 </DndContext>
 
-                <button
-                    onClick={addItem}
-                    className="w-full py-6 rounded-3xl border-2 border-dashed border-glass-stroke text-primary/70 hover:border-neon hover:text-neon hover:bg-neon/5 transition-all font-black flex items-center justify-center gap-3 group"
-                >
-                    <Plus size={20} className="group-hover:rotate-90 transition-transform" />
-                    {lang === 'en' ? 'ADD ANOTHER LINK' : 'ሌላ ሊንክ ጨምር'}
-                </button>
+                {!readOnly && (
+                    <button
+                        onClick={addItem}
+                        className="w-full py-6 rounded-3xl border-2 border-dashed border-glass-stroke text-primary/70 hover:border-neon hover:text-neon hover:bg-neon/5 transition-all font-black flex items-center justify-center gap-3 group"
+                    >
+                        <Plus size={20} className="group-hover:rotate-90 transition-transform" />
+                        {lang === 'en' ? 'ADD ANOTHER LINK' : 'ሌላ ሊንክ ጨምር'}
+                    </button>
+                )}
             </div>
         </div>
     );
