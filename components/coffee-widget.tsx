@@ -26,7 +26,7 @@ export function CoffeeWidget() {
             className="fixed bottom-24 left-4 md:top-24 md:left-8 z-[100] cursor-grab active:cursor-grabbing"
         >
             <motion.a
-                href="https://buymeacoffee.com/abeltech"
+                href="https://kelal.abelo.tech/bundle/support"
                 target="_blank"
                 rel="noopener noreferrer"
                 whileHover={{ scale: 1.05 }}

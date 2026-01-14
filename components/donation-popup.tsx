@@ -101,7 +101,7 @@ export function DonationPopup() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <motion.a
-                                    href="https://buymeacoffee.com/abeltech"
+                                    href="https://kelal.abelo.tech/bundle/support"
                                     target="_blank"
                                     whileHover={{ scale: 1.02, y: -5 }}
                                     whileTap={{ scale: 0.98 }}

@@ -692,7 +692,7 @@ export default function Home() {
                                 <a href="https://abelo.tech" target="_blank" className="px-8 py-5 rounded-2xl bg-primary text-background font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl flex items-center gap-3 group">{t.viewPortfolio} <ExternalLink size={20} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" /></a>
                                 <div className="flex gap-2">
                                     {[
-                                        { icon: <Coffee size={20} />, url: "https://buymeacoffee.com/abeltech" },
+                                        { icon: <Coffee size={20} />, url: "https://kelal.abelo.tech/bundle/support" },
                                         { icon: <Heart size={20} />, url: "https://jami.bio/Abelb" },
                                         { icon: <Linkedin size={20} />, url: "https://www.linkedin.com/in/abelabekele" },
                                         { icon: <GithubIcon size={20} />, url: "https://github.com/Abel9436" },
