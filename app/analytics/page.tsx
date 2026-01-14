@@ -3,10 +3,12 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-    Activity, TrendingUp, MousePointer2, Globe,
-    Smartphone, Monitor, Layout, Zap, BarChart3,
-    ArrowUpRight, Clock, Shield, Sparkles, Layers,
-    ChevronRight, ExternalLink
+    Plus, Bell, Users, LayoutDashboard,
+    Settings, LogOut, ChevronDown,
+    Moon, Sun, Globe, CheckCircle2,
+    Sparkles, ArrowLeft, Activity, Users as UsersIcon,
+    TrendingUp, Zap, MousePointer2, Layers, BarChart3,
+    Smartphone, Monitor, ChevronRight, Shield
 } from "lucide-react";
 import { ModernBackground } from "@/components/modern-background";
 import { Navbar } from "@/components/navbar";
@@ -15,6 +17,8 @@ import { cn } from "@/lib/utils";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 interface GlobalStats {
+    total_users: number;
+    users_7d: number;
     total_links: number;
     total_bundles: number;
     total_clicks: number;
@@ -128,26 +132,33 @@ export default function GlobalAnalyticsPage() {
                 </div>
 
                 {/* Core Metrics Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
                     <StatCard
-                        label="Total Digital Footprint"
+                        label="Digital Footprint"
                         value={stats?.total_clicks || 0}
                         icon={MousePointer2}
                         color="#00f2ff"
                         trend={stats?.clicks_24h}
                     />
                     <StatCard
-                        label="Active Studios & Drops"
-                        value={stats?.total_links || 0}
-                        icon={Layers}
-                        color="#ff0055"
-                        trend={stats?.growth_7d}
+                        label="Pro Creators"
+                        value={stats?.total_users || 0}
+                        icon={Users}
+                        color="#ffae00"
+                        trend={stats?.users_7d}
                     />
                     <StatCard
-                        label="Professional Studios"
+                        label="Studios Created"
                         value={stats?.total_bundles || 0}
                         icon={Sparkles}
                         color="#7000ff"
+                    />
+                    <StatCard
+                        label="Total Drops"
+                        value={(stats?.total_links || 0) + (stats?.total_bundles || 0)}
+                        icon={Layers}
+                        color="#ff0055"
+                        trend={stats?.growth_7d}
                     />
                 </div>
 
