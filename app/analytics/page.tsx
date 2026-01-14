@@ -29,6 +29,135 @@ interface GlobalStats {
     click_history: { date: string; count: number }[];
 }
 
+const IntelligenceGraph = ({ data }: { data: { date: string; count: number }[] }) => {
+    if (!data || data.length === 0) return null;
+
+    const max = Math.max(...data.map(d => d.count), 1);
+    const height = 300;
+    const width = 1000;
+    const padding = 50;
+
+    const points = data.map((d, i) => {
+        const x = (i / (data.length - 1)) * (width - padding * 2) + padding;
+        const y = height - ((d.count / max) * (height - padding * 2) + padding);
+        return { x, y, count: d.count, date: d.date };
+    });
+
+    // Create a smooth path using Cubic Bezier
+    let pathData = `M ${points[0].x},${points[0].y}`;
+    for (let i = 0; i < points.length - 1; i++) {
+        const curr = points[i];
+        const next = points[i + 1];
+        const xc = (curr.x + next.x) / 2;
+        pathData += ` C ${xc},${curr.y} ${xc},${next.y} ${next.x},${next.y}`;
+    }
+
+    const areaData = `${pathData} L ${points[points.length - 1].x},${height} L ${points[0].x},${height} Z`;
+
+    return (
+        <div className="w-full relative h-[350px] group/graph">
+            <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible select-none">
+                <defs>
+                    <linearGradient id="graphGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#00f2ff" stopOpacity="0.4" />
+                        <stop offset="100%" stopColor="#00f2ff" stopOpacity="0" />
+                    </linearGradient>
+                    <filter id="glow">
+                        <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                        <feMerge>
+                            <feMergeNode in="coloredBlur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                </defs>
+
+                {/* Grid Lines */}
+                {[0, 0.25, 0.5, 0.75, 1].map((p: number, i: number) => (
+                    <line
+                        key={i}
+                        x1={padding} y1={padding + p * (height - padding * 2)}
+                        x2={width - padding} y2={padding + p * (height - padding * 2)}
+                        stroke="rgba(255,255,255,0.05)"
+                        strokeWidth="1"
+                    />
+                ))}
+
+                {/* Area Fill */}
+                <motion.path
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 1.5 }}
+                    d={areaData}
+                    fill="url(#graphGradient)"
+                />
+
+                {/* Main Line */}
+                <motion.path
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: 1, opacity: 1 }}
+                    transition={{ duration: 2, ease: "easeInOut" }}
+                    d={pathData}
+                    fill="none"
+                    stroke="#00f2ff"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    filter="url(#glow)"
+                />
+
+                {/* Points & Interactive Tooltips */}
+                {points.map((p, i) => (
+                    <g key={i} className="group/point">
+                        <motion.circle
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: 1.5 + i * 0.1 }}
+                            cx={p.x}
+                            cy={p.y}
+                            r="6"
+                            fill="#00f2ff"
+                            className="cursor-pointer transition-all duration-300"
+                        />
+                        <motion.circle
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: 1.5 + i * 0.1 }}
+                            cx={p.x}
+                            cy={p.y}
+                            r="12"
+                            fill="#00f2ff"
+                            className="opacity-0 group-hover/point:opacity-20 transition-opacity cursor-pointer"
+                        />
+
+                        {/* Custom Tooltip */}
+                        <foreignObject
+                            x={p.x - 50}
+                            y={p.y - 70}
+                            width="100"
+                            height="60"
+                            className="opacity-0 group-hover/point:opacity-100 transition-all pointer-events-none translate-y-2 group-hover/point:translate-y-0 duration-300"
+                        >
+                            <div className="bg-contrast text-background p-2 rounded-xl text-center shadow-2xl border border-white/20">
+                                <div className="text-[10px] font-black uppercase leading-none mb-1">{p.count} Clicks</div>
+                                <div className="text-[8px] font-bold opacity-70">{p.date.split('-').slice(1).join('/')}</div>
+                            </div>
+                        </foreignObject>
+                    </g>
+                ))}
+            </svg>
+
+            {/* Legend/Date Labels */}
+            <div className="absolute bottom-0 left-0 w-full flex justify-between px-[50px] pointer-events-none">
+                {data.map((d: { date: string; count: number }, i: number) => (
+                    <span key={i} className="text-[8px] font-black text-primary/30 uppercase tracking-widest mt-4">
+                        {d.date.split('-').slice(1).join('/')}
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
+};
+
 export default function GlobalAnalyticsPage() {
     const [stats, setStats] = useState<GlobalStats | null>(null);
     const [loading, setLoading] = useState(true);
@@ -178,31 +307,8 @@ export default function GlobalAnalyticsPage() {
                             </div>
                         </div>
 
-                        <div className="h-[300px] flex items-end gap-2 md:gap-4 px-2">
-                            {stats?.click_history.map((day, i) => {
-                                const max = Math.max(...stats.click_history.map(h => h.count), 1);
-                                const height = (day.count / max) * 100;
-                                return (
-                                    <div key={i} className="flex-1 flex flex-col items-center gap-4 group">
-                                        <div className="w-full relative">
-                                            <motion.div
-                                                initial={{ height: 0 }}
-                                                animate={{ height: `${height}%` }}
-                                                className="w-full bg-gradient-to-t from-primary/20 via-primary to-neon rounded-t-2xl relative"
-                                            >
-                                                <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-contrast text-background px-2 py-1 rounded-lg text-[10px] font-black italic whitespace-nowrap">
-                                                    {day.count} Clicks
-                                                </div>
-                                            </motion.div>
-                                        </div>
-                                        <div className="flex flex-col items-center">
-                                            <span className="text-[8px] font-black text-primary/30 uppercase tracking-widest rotate-45 mt-2">
-                                                {day.date.split('-').slice(1).join('/')}
-                                            </span>
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                        <div className="min-h-[350px] relative">
+                            {stats && <IntelligenceGraph data={stats.click_history} />}
                         </div>
                     </div>
 
@@ -212,7 +318,7 @@ export default function GlobalAnalyticsPage() {
                         <div className="glass-card p-8 rounded-[40px] border-glass-stroke shadow-xl space-y-6">
                             <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/40">Hardware Profile</span>
                             <div className="space-y-4">
-                                {stats?.device_stats.map((d, i) => (
+                                {stats?.device_stats.map((d: { device: string; count: number }, i: number) => (
                                     <div key={i} className="flex items-center justify-between p-4 rounded-3xl bg-glass-fill border border-glass-stroke hover:border-primary/30 transition-all">
                                         <div className="flex items-center gap-3">
                                             {d.device.toLowerCase() === 'mobile' ? <Smartphone size={16} /> : <Monitor size={16} />}
@@ -228,7 +334,7 @@ export default function GlobalAnalyticsPage() {
                         <div className="glass-card p-8 rounded-[40px] border-glass-stroke shadow-xl space-y-6">
                             <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/40">Propagation Sources</span>
                             <div className="space-y-4">
-                                {stats?.top_referrers.map((r, i) => (
+                                {stats?.top_referrers.map((r: { referer: string; count: number }, i: number) => (
                                     <div key={i} className="flex items-center justify-between p-4 rounded-3xl bg-glass-fill border border-glass-stroke">
                                         <div className="flex items-center gap-3 truncate">
                                             <Globe size={14} className="text-primary/40 shrink-0" />
