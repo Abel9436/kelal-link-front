@@ -8,7 +8,7 @@ import {
     Plus, Bell, Users, LayoutDashboard,
     Settings, LogOut, ChevronDown,
     Moon, Sun, Globe, CheckCircle2,
-    Sparkles, ArrowLeft
+    Sparkles, ArrowLeft, Activity
 } from "lucide-react";
 import { useAuth } from "@/components/auth-context";
 import { useTheme } from "next-themes";
@@ -250,6 +250,11 @@ export function Navbar({ children, dashboardProps }: { children?: React.ReactNod
                                             </div>
                                         </button>
 
+                                        <Link href="/analytics" onClick={() => setShowSettings(false)} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-glass-stroke text-primary/80 transition-all border border-neon/10 bg-neon/5">
+                                            <Activity size={14} className="text-neon" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-contrast">Public Intelligence</span>
+                                        </Link>
+
                                         {user && (
                                             <>
                                                 <Link href="/dashboard" onClick={() => setShowSettings(false)} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-glass-stroke text-primary/80 transition-all">
@@ -283,6 +288,6 @@ export function Navbar({ children, dashboardProps }: { children?: React.ReactNod
                     </AnimatePresence>
                 </div>
             </div>
-        </nav>
+        </nav >
     );
 }
