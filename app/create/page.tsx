@@ -12,6 +12,7 @@ import { UserMenu } from "@/components/user-menu";
 import { useAuth } from "@/components/auth-context";
 import { ModernBackground } from "@/components/modern-background";
 import { BundleBuilder } from "@/components/bundle-builder";
+import { ProfessionalColorPicker } from "@/components/professional-color-picker";
 import { getPlatformInfo } from "@/lib/platforms";
 import React from "react";
 import { Navbar } from "@/components/navbar";
@@ -215,39 +216,23 @@ export default function CreateBundlePage() {
                                             { label: lang === 'en' ? 'Title' : 'የርዕስ ቀለም', value: titleColor, setter: setTitleColor, desc: 'Focus' },
                                             { label: lang === 'en' ? 'Text' : 'የፅሁፍ ቀለም', value: textColor, setter: setTextColor, desc: 'Clarity' }
                                         ].map((c, i) => (
-                                            <div key={i} className="space-y-3">
-                                                <div className="flex justify-between items-center px-2">
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-contrast">{c.label}</span>
-                                                    <span className="text-[8px] font-bold text-primary/40 uppercase tracking-widest italic">{c.desc}</span>
-                                                </div>
-                                                <div className="relative group/color overflow-hidden rounded-[24px] bg-glass-fill border-2 border-glass-stroke hover:border-primary/40 transition-all flex items-center p-1">
-                                                    <input
-                                                        type="color"
-                                                        value={c.value.startsWith('rgba') ? '#ffffff' : c.value}
-                                                        onChange={(e) => c.setter(e.target.value)}
-                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                                    />
-                                                    <div className="w-12 h-12 rounded-2xl shadow-inner border border-white/5" style={{ backgroundColor: c.value }} />
-                                                    <div className="flex-1 px-4">
-                                                        <span className="text-xs font-black text-contrast uppercase tracking-tighter block truncate">{c.value}</span>
-                                                        <span className="text-[8px] font-bold text-primary/30 uppercase tracking-widest italic">Color State</span>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <ProfessionalColorPicker
+                                                key={i}
+                                                label={c.label}
+                                                description={c.desc}
+                                                color={c.value}
+                                                onChange={c.setter}
+                                            />
                                         ))}
                                     </div>
 
-                                    <div className="relative group/custom flex items-center bg-glass-fill border-2 border-glass-stroke rounded-[24px] px-8 focus-within:border-primary transition-all max-w-md">
-                                        <Palette size={14} className="text-primary/30 mr-4" />
-                                        <span className="text-[10px] font-black text-primary/30 mr-4 uppercase">Direct Input</span>
-                                        <input
-                                            type="text"
-                                            placeholder="#HEXCODE"
-                                            value={themeColor}
-                                            onChange={(e) => setThemeColor(e.target.value)}
-                                            className="flex-1 bg-transparent py-5 text-sm font-black outline-none text-contrast uppercase tracking-widest"
+                                    <div className="max-w-md">
+                                        <ProfessionalColorPicker
+                                            label={lang === 'en' ? 'Direct Studio Input' : 'ቀጥታ የግቤት ቀለም'}
+                                            description="Precision"
+                                            color={themeColor}
+                                            onChange={setThemeColor}
                                         />
-                                        <div className="w-8 h-8 rounded-xl border-2 border-white/10 shadow-lg" style={{ backgroundColor: themeColor }} />
                                     </div>
 
                                     {/* Image & Media Expansion */}
