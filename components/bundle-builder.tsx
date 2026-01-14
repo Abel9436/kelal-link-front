@@ -56,6 +56,8 @@ function SortableItem({ id, link, onUpdate, onToggleSpotlight, onRemove, lang, r
         zIndex: isDragging ? 50 : 0,
     };
 
+    const isLink = link.url.startsWith('http://') || link.url.startsWith('https://') || link.url.includes('www.');
+
     return (
         <motion.div
             ref={setNodeRef}
@@ -95,11 +97,11 @@ function SortableItem({ id, link, onUpdate, onToggleSpotlight, onRemove, lang, r
 
                     <div className="relative group/input">
                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/60 group-focus-within/input:text-neon transition-colors">
-                            <LinkIcon size={16} />
+                            {isLink ? <LinkIcon size={16} /> : <Type size={16} />}
                         </div>
                         <input
                             type="text"
-                            placeholder="https://..."
+                            placeholder={isLink ? "https://..." : (lang === 'en' ? "Enter link or any text..." : "ሊንክ ወይም ማንኛውንም ጽሁፍ ያስገቡ...")}
                             value={link.url}
                             onChange={(e) => {
                                 const val = e.target.value;
@@ -253,7 +255,7 @@ export function BundleBuilder({
             <div className="space-y-4">
                 <div className="flex items-center justify-between px-4">
                     <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-primary/70">
-                        {lang === 'en' ? 'DRAGGABLE LINKS' : 'ተንቀሳቃሽ ሊንኮች'}
+                        {lang === 'en' ? 'DRAGGABLE CONTENT' : 'ተንቀሳቃሽ ይዘቶች'}
                     </h4>
                     <div className="flex items-center gap-6">
                         {!readOnly && (
@@ -299,7 +301,7 @@ export function BundleBuilder({
                         className="w-full py-6 rounded-3xl border-2 border-dashed border-glass-stroke text-primary/70 hover:border-neon hover:text-neon hover:bg-neon/5 transition-all font-black flex items-center justify-center gap-3 group"
                     >
                         <Plus size={20} className="group-hover:rotate-90 transition-transform" />
-                        {lang === 'en' ? 'ADD ANOTHER LINK' : 'ሌላ ሊንክ ጨምር'}
+                        {lang === 'en' ? 'ADD ANOTHER ITEM' : 'ሌላ ይዘት ጨምር'}
                     </button>
                 )}
             </div>

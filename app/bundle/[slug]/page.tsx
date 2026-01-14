@@ -6,7 +6,8 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
     ExternalLink, Share2, Heart, Shield,
-    Layers, Zap, Sparkles, Globe, ArrowRight, Code
+    Layers, Zap, Sparkles, Globe, ArrowRight, Code,
+    Copy, Check
 } from "lucide-react";
 import { ModernBackground } from "@/components/modern-background";
 import { getPlatformInfo } from "@/lib/platforms";
@@ -125,18 +126,36 @@ export default function BundleViewPage() {
                 {/* Items List */}
                 <div className="space-y-4">
                     {bundle.items.map((item: any, i: number) => {
-                        const platform = getPlatformInfo(item.url);
+                        const isLink = item.url.startsWith('http://') || item.url.startsWith('https://') || item.url.includes('www.');
+                        const platform = isLink ? getPlatformInfo(item.url) : { icon: Code, color: 'text-primary/30' };
+                        const [copied, setCopied] = useState(false);
+
+                        const handleCopy = (e: React.MouseEvent) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(item.url);
+                            setCopied(true);
+                            setTimeout(() => setCopied(false), 2000);
+                        };
+
+                        const CardWrapper = isLink ? motion.a : motion.div;
+                        const wrapperProps: any = isLink ? {
+                            href: item.url.startsWith('www.') ? `https://${item.url}` : item.url,
+                            target: "_blank",
+                            rel: "noopener noreferrer"
+                        } : {
+                            onClick: handleCopy
+                        };
+
                         return (
-                            <motion.a
+                            <CardWrapper
                                 key={i}
-                                href={item.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                                {...wrapperProps}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: i * 0.1 }}
                                 whileHover="hover"
-                                className="group relative block w-full"
+                                className={cn("group relative block w-full cursor-pointer")}
                             >
                                 <motion.div
                                     variants={{ hover: { opacity: 1, scale: 1.02 } }}
@@ -190,15 +209,15 @@ export default function BundleViewPage() {
                                                 {item.label}
                                             </motion.h3>
                                             <p className="text-[10px] font-black uppercase tracking-[0.2em] truncate" style={{ color: bundle.text_color + '80' }}>
-                                                {new URL(item.url).hostname}
+                                                {isLink ? (item.url.replace(/^https?:\/\//, '').split('/')[0]) : item.url}
                                             </p>
                                         </div>
                                     </div>
                                     <motion.div variants={{ hover: { x: 8, color: bundle.theme_color } }} className="text-primary/20 transition-all">
-                                        <ArrowRight size={24} />
+                                        {isLink ? <ArrowRight size={24} /> : (copied ? <Check size={24} className="text-green-500" /> : <Copy size={24} />)}
                                     </motion.div>
                                 </motion.div>
-                            </motion.a>
+                            </CardWrapper>
                         );
                     })}
                 </div>
